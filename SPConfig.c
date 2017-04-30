@@ -9,6 +9,8 @@
 #include <stdlib.h>
 #include <stdbool.h>
 #include <assert.h>
+#include <ctype.h>
+#include <string.h>
 
 #define MAX_STRING_SIZE 1024;
 
@@ -59,10 +61,12 @@ struct sp_config_t {
 SPConfig spConfigCreate(const char* filename, SP_CONFIG_MSG* msg) {
 	assert(msg != NULL);
 	if (!filename) {
-		return SP_CONFIG_INVALID_ARGUMENT;
+		*msg = SP_CONFIG_INVALID_ARGUMENT;
+		return NULL;
 	}
-	return SP_CONFIG_SUCCESS;
+	*msg = SP_CONFIG_SUCCESS;
 	// TODO: complete
+	return NULL;
 }
 
 bool spConfigIsExtractionMode(const SPConfig config, SP_CONFIG_MSG* msg) {
@@ -123,11 +127,22 @@ SP_CONFIG_MSG spConfigGetImagePath(char* imagePath, const SPConfig config,
 	if (index >= config->spNumOfImages) {
 		return SP_CONFIG_INDEX_OUT_OF_RANGE;
 	}
-	sprintf(imagePath, "%s%s%d%s", config->spImagesDirectory,
-			config->spImagesPrefix, index, config->spImagesSuffix);
+	if (sprintf(imagePath, "%s%s%d%s", config->spImagesDirectory,
+			config->spImagesPrefix, index, config->spImagesSuffix) < 0) {
+		return SP_CONFIG_POINTER_OUT_OF_SPACE; // TODO: check this. might be wrong
+	}
+	return SP_CONFIG_SUCCESS;
 }
 
 SP_CONFIG_MSG spConfigGetPCAPath(char* pcaPath, const SPConfig config) {
+	if (!pcaPath || !config) {
+		return SP_CONFIG_INVALID_ARGUMENT;
+	}
+	if (sprintf(pcaPath, "%s%s", config->spImagesDirectory,
+			config->spPCAFilename) < 0) {
+		return SP_CONFIG_POINTER_OUT_OF_SPACE; // TODO: check this. might be wrong
+	}
+	return SP_CONFIG_SUCCESS;
 }
 
 void spConfigDestroy(SPConfig config) {
@@ -135,29 +150,32 @@ void spConfigDestroy(SPConfig config) {
 
 bool isValidConfigLine(const char* line) {
 	int i = 0;
-	for (; line[i] == ' '; i++) {
+	for (; isspace(line[i]); i++) {
 	}
 	if (!line || line[i] == '#') { // if line contains only spaces and a comment
 		return true;
 	}
 	char variable[1024], value[1024];
-	for (int j = 0; line[i] != ' '; i++, j++) { // we reached the variable
+	for (int j = 0; !isspace(line[i]); i++, j++) { // we reached the variable
 		variable[j] = line[i];
 	}
-	for (; line[i] == ' '; i++) {
+	for (; isspace(line[i]); i++) {
 	}
-	if (line[i] != '=') {
+	if (strlen(variable) == 0 || line[i] != '=') {
 		return false;
 	}
 	i++;
-	for (; line[i] == ' '; i++) {
+	for (; isspace(line[i]); i++) {
 	}
-	for (int j = 0; line[i] != ' '; i++, j++) {
+	for (int j = 0; !isspace(line[i]); i++, j++) {
 		value[j] = line[i];
 	}
-	for (i = 0; line[0] == ' '; i++) {
+	if (strlen(value) == 0) {
+		return false;
 	}
-	if (line[i] && line[i] != '#') {
+	for (i = 0; isspace(line[i]); i++) {
+	}
+	if (line[i] != '\0' && line[i] != '#') {
 		return false;
 	}
 	return true;

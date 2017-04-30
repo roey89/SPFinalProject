@@ -20,7 +20,8 @@ typedef enum sp_config_msg_t {
 	SP_CONFIG_INVALID_STRING,
 	SP_CONFIG_INVALID_ARGUMENT,
 	SP_CONFIG_INDEX_OUT_OF_RANGE,
-	SP_CONFIG_SUCCESS
+	SP_CONFIG_SUCCESS,
+	SP_CONFIG_POINTER_OUT_OF_SPACE // TODO: I added this. check.
 } SP_CONFIG_MSG;
 
 typedef enum sp_config_split_method_t {
