@@ -45,15 +45,15 @@ struct sp_config_t {
 //TODO: use this somehow
 /*
  * int spPCADimension = spPCADimension_DEFAULT;
-	char* spPCAFilename = spPCAFilename_DEFAULT;
-	int spNumOfFeatures = spNumOfFeatures_DEFAULT;
-	bool spExtractionMode = spExtractionMode_DEFAULT;
-	int spNumOfSimilarImages = spNumOfSimilarImages_DEFAULT;
-	SP_CONFIG_SPLIT_METHOD spKDTreeSplitMethod = spKDTreeSplitMethod_DEFAULT;
-	int spKNN = spKNN_DEFAULT;
-	bool spMinimalGUI = spMinimalGUI_DEFAULT;
-	int spLoggerLevel = spLoggerLevel_DEFAULT;
-	char* spLoggerFilename = spLoggerFilename_DEFAULT;
+ char* spPCAFilename = spPCAFilename_DEFAULT;
+ int spNumOfFeatures = spNumOfFeatures_DEFAULT;
+ bool spExtractionMode = spExtractionMode_DEFAULT;
+ int spNumOfSimilarImages = spNumOfSimilarImages_DEFAULT;
+ SP_CONFIG_SPLIT_METHOD spKDTreeSplitMethod = spKDTreeSplitMethod_DEFAULT;
+ int spKNN = spKNN_DEFAULT;
+ bool spMinimalGUI = spMinimalGUI_DEFAULT;
+ int spLoggerLevel = spLoggerLevel_DEFAULT;
+ char* spLoggerFilename = spLoggerFilename_DEFAULT;
  */
 
 SPConfig spConfigCreate(const char* filename, SP_CONFIG_MSG* msg) {
@@ -66,22 +66,65 @@ SPConfig spConfigCreate(const char* filename, SP_CONFIG_MSG* msg) {
 }
 
 bool spConfigIsExtractionMode(const SPConfig config, SP_CONFIG_MSG* msg) {
+	assert(msg != NULL);
+	if (!config) {
+		*msg = SP_CONFIG_INVALID_ARGUMENT;
+		return false;
+	}
+	*msg = SP_CONFIG_SUCCESS;
+	return config->spExtractionMode;
 }
 
 bool spConfigMinimalGui(const SPConfig config, SP_CONFIG_MSG* msg) {
+	assert(msg != NULL);
+	if (!config) {
+		*msg = SP_CONFIG_INVALID_ARGUMENT;
+		return false;
+	}
+	*msg = SP_CONFIG_SUCCESS;
+	return config->spMinimalGUI;
 }
 
 int spConfigGetNumOfImages(const SPConfig config, SP_CONFIG_MSG* msg) {
+	assert(msg != NULL);
+	if (!config) {
+		*msg = SP_CONFIG_INVALID_ARGUMENT;
+		return -1;
+	}
+	*msg = SP_CONFIG_SUCCESS;
+	return config->spNumOfImages;
 }
 
 int spConfigGetNumOfFeatures(const SPConfig config, SP_CONFIG_MSG* msg) {
+	assert(msg != NULL);
+	if (!config) {
+		*msg = SP_CONFIG_INVALID_ARGUMENT;
+		return -1;
+	}
+	*msg = SP_CONFIG_SUCCESS;
+	return config->spNumOfFeatures;
 }
 
 int spConfigGetPCADim(const SPConfig config, SP_CONFIG_MSG* msg) {
+	assert(msg != NULL);
+	if (!config) {
+		*msg = SP_CONFIG_INVALID_ARGUMENT;
+		return -1;
+	}
+	*msg = SP_CONFIG_SUCCESS;
+	return config->spPCADimension;
 }
 
 SP_CONFIG_MSG spConfigGetImagePath(char* imagePath, const SPConfig config,
 		int index) {
+	if (!imagePath || !config) {
+		return SP_CONFIG_INVALID_ARGUMENT;
+	}
+	if (index >= config->spNumOfImages) {
+		return SP_CONFIG_INDEX_OUT_OF_RANGE;
+	}
+	sprintf(imagePath, "%s%s%d%s", config->spImagesDirectory,
+			config->spImagesPrefix, index, config->spImagesSuffix);
 }
 
 SP_CONFIG_MSG spConfigGetPCAPath(char* pcaPath, const SPConfig config) {
