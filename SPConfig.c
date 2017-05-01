@@ -149,16 +149,19 @@ bool isValidConfigLine(const char* line) {
 	int i = 0;
 	for (; isspace(line[i]); i++) {
 	}
-	if (!line || line[i] == '#') { // if line contains only spaces and a comment
+	if (line[i] == '\0' || line[i] == '#') { // if line contains only spaces and a comment
 		return true;
 	}
 	char variable[1024], value[1024];
 	for (int j = 0; !isspace(line[i]); i++, j++) { // we reached the variable
 		variable[j] = line[i];
 	}
+	if (strlen(variable) == 0) {
+		return false;
+	}
 	for (; isspace(line[i]); i++) {
 	}
-	if (strlen(variable) == 0 || line[i] != '=') {
+	if (line[i] != '=') {
 		return false;
 	}
 	i++;
