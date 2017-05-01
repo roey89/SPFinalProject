@@ -12,8 +12,12 @@
 #include <ctype.h>
 #include <string.h>
 
-#define MAX_STRING_SIZE 1024;
+#define MAX_STRING_SIZE 1024
 
+//File open mode
+#define SP_CONFIG_OPEN_MODE "r"
+
+// default values
 #define spPCADimension_DEFAULT 20
 #define spPCAFilename_DEFAULT "pca.yml"
 #define spNumOfFeatures_DEFAULT 100
@@ -25,7 +29,26 @@
 #define spLoggerLevel_DEFAULT 3
 #define spLoggerFilename_DEFAULT "stdout"
 
-struct sp_config_t {
+bool isValidConfigLine(const char* line);
+
+// Constraints
+bool noSpacesString(char* str);
+bool spImagesDirectoryConstraint(char* directory);
+bool spImagesPrefixConstraint(char* prefix);
+bool spImagesSuffixConstraint(char* suffix);
+bool spNumOfImagesConstraint(int numOfImages);
+bool spPCADimensionConstraint(int dim);
+bool spPCAFilenameConstraint(char* filename);
+bool spNumOfFeaturesConstraint(int numOfFeatures);
+bool spExtractionModeConstraint(bool extractionMode);
+bool spNumOfSimilarImagesConstraint(int numOfSimilarImages);
+bool spKDTreeSplitMethodConstraint(SP_CONFIG_SPLIT_METHOD method);
+bool spKNNConstraint(int spKNN);
+bool spMinimalGUI(bool minimalGUI);
+bool spLoggerLevelConstraint(int level);
+bool spLoggerFilenameConstraint(char* filename);
+
+typedef struct sp_config_t {
 	// no default values
 	char* spImagesDirectory;
 	char* spImagesPrefix;
@@ -42,30 +65,66 @@ struct sp_config_t {
 	bool spMinimalGUI;
 	int spLoggerLevel;
 	char* spLoggerFilename;
-};
-
-//TODO: use this somehow
-/*
- * int spPCADimension = spPCADimension_DEFAULT;
- char* spPCAFilename = spPCAFilename_DEFAULT;
- int spNumOfFeatures = spNumOfFeatures_DEFAULT;
- bool spExtractionMode = spExtractionMode_DEFAULT;
- int spNumOfSimilarImages = spNumOfSimilarImages_DEFAULT;
- SP_CONFIG_SPLIT_METHOD spKDTreeSplitMethod = spKDTreeSplitMethod_DEFAULT;
- int spKNN = spKNN_DEFAULT;
- bool spMinimalGUI = spMinimalGUI_DEFAULT;
- int spLoggerLevel = spLoggerLevel_DEFAULT;
- char* spLoggerFilename = spLoggerFilename_DEFAULT;
- */
+} SPInnerConfig;
 
 SPConfig spConfigCreate(const char* filename, SP_CONFIG_MSG* msg) {
 	assert(msg != NULL);
+
 	if (!filename) {
 		*msg = SP_CONFIG_INVALID_ARGUMENT;
 		return NULL;
 	}
+
+	FILE * fp = fopen(filename, SP_CONFIG_OPEN_MODE);
+	if (!fp) {
+		*msg = SP_CONFIG_CANNOT_OPEN_FILE;
+		return NULL;
+	}
+
+	SPConfig config = (SPConfig) malloc(sizeof(SPInnerConfig));
+	if (!config) {
+		*msg = SP_CONFIG_ALLOC_FAIL;
+		return NULL;
+	}
+
+	// setting default values
+	config->spPCADimension = spPCADimension_DEFAULT;
+	config->spPCAFilename = spPCAFilename_DEFAULT;
+	config->spNumOfFeatures = spNumOfFeatures_DEFAULT;
+	config->spExtractionMode = spExtractionMode_DEFAULT;
+	config->spNumOfSimilarImages = spNumOfSimilarImages_DEFAULT;
+	config->spKDTreeSplitMethod = spKDTreeSplitMethod_DEFAULT;
+	config->spKNN = spKNN_DEFAULT;
+	config->spMinimalGUI = spMinimalGUI_DEFAULT;
+	config->spLoggerLevel = spLoggerLevel_DEFAULT;
+	config->spLoggerFilename = spLoggerFilename_DEFAULT;
+
+	// going over the file
+	char currChar, line[MAX_STRING_SIZE];
+	int charNum, lineNum = 0;
+	bool spImagesDirectorySet, spImagesPrefixSet, spImagesSuffixSet,
+			spNumOfImagesSet;
+
+	while (!feof(fp)) {
+		charNum = 0;
+		lineNum++;
+		while (!feof(fp) && (currChar = fgetc(fp)) != '\n') {
+			line[charNum++] = currChar;
+		}
+		if (!isValidConfigLine(line)) {
+			free(config);
+			config = NULL;
+			*msg = SP_CONFIG_INVALID_LINE;
+			spLoggerDestroy();
+			printf("File: %s\nLine: %d\nMessage: Invalid configuration line",
+					filename, lineNum);
+			return NULL;
+		}
+
+	}
+	fread(line, sizeof(char), MAX_STRING_SIZE, fp);
 	*msg = SP_CONFIG_SUCCESS;
-	// TODO: complete
+	// TODO complete
 	return NULL;
 }
 
@@ -152,7 +211,7 @@ bool isValidConfigLine(const char* line) {
 	if (line[i] == '\0' || line[i] == '#') { // if line contains only spaces and a comment
 		return true;
 	}
-	char variable[1024], value[1024];
+	char variable[MAX_STRING_SIZE], value[MAX_STRING_SIZE];
 	for (int j = 0; !isspace(line[i]); i++, j++) { // we reached the variable
 		variable[j] = line[i];
 	}
@@ -176,4 +235,67 @@ bool isValidConfigLine(const char* line) {
 	for (i = 0; isspace(line[i]); i++) {
 	}
 	return (line[i] == '\0' || line[i] == '#');
+}
+
+// Constraints
+
+bool noSpacesString(char* str) {
+	for (int i = 0; i < strlen(str); i++) {
+		if (str[i] == ' ') {
+			return false;
+		}
+	}
+	return true;
+}
+
+bool positiveNum(int num) {
+	return num > 0;
+}
+bool spImagesDirectoryConstraint(char* directory) {
+	return noSpacesString(directory);
+}
+bool spImagesPrefixConstraint(char* prefix) {
+	return noSpacesString(prefix);
+}
+bool spImagesSuffixConstraint(char* suffix) {
+	char* arr[4] = { ".jpg", ".png", ".bmp", ".gif" };
+	for (int i = 0; i < 4; i++) {
+		if (strcmp(suffix, arr[i]) == 0) {
+			return true;
+		}
+	}
+	return false;
+}
+bool spNumOfImagesConstraint(int numOfImages) {
+	return positiveNum(numOfImages);
+}
+bool spPCADimensionConstraint(int dim) {
+	return dim >= 10 && dim <= 28;
+}
+bool spPCAFilenameConstraint(char* filename) {
+	return noSpacesString(filename);
+}
+bool spNumOfFeaturesConstraint(int numOfFeatures) {
+	return positiveNum(numOfFeatures);
+}
+bool spExtractionModeConstraint(bool extractionMode) { // just for clarification
+	return true;
+}
+bool spNumOfSimilarImagesConstraint(int numOfSimilarImages) {
+	return positiveNum(numOfSimilarImages);
+}
+bool spKDTreeSplitMethodConstraint(SP_CONFIG_SPLIT_METHOD method) { // just for clarification
+	return true;
+}
+bool spKNNConstraint(int spKNN) {
+	return positiveNum(spKNN);
+}
+bool spMinimalGUIConstraint(bool minimalGUI) { // just for clarification
+	return true;
+}
+bool spLoggerLevelConstraint(int level) {
+	return level >= 1 && level <= 4;
+}
+bool spLoggerFilenameConstraint(char* filename) {
+	return noSpacesString(filename);
 }

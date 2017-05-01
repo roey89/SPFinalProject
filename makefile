@@ -1,7 +1,7 @@
 CC = gcc
 CPP = g++
 #put all your object files here
-OBJS = main.o SPImageProc.o SPPoint.o 
+OBJS = main.o SPImageProc.o SPPoint.o SPConfig.o SPLogger.o 
 #The executabel filename
 EXEC = SPCBIR
 INCLUDEPATH=/usr/local/lib/opencv-3.1.0/include/
@@ -18,15 +18,21 @@ C_COMP_FLAG = -std=c99 -Wall -Wextra \
 
 $(EXEC): $(OBJS)
 	$(CPP) $(OBJS) -L$(LIBPATH) $(LIBS) -o $@
-main.o: main.cpp #put dependencies here!
+main.o: main.cpp
 	$(CPP) $(CPP_COMP_FLAG) -I$(INCLUDEPATH) -c $*.cpp
-#a rule for building a simple c++ source file
-#use g++ -MM SPImageProc.cpp to see dependencies
 SPImageProc.o: SPImageProc.cpp SPImageProc.h SPConfig.h SPPoint.h SPLogger.h
 	$(CPP) $(CPP_COMP_FLAG) -I$(INCLUDEPATH) -c $*.cpp
-#a rule for building a simple c source file
-#use "gcc -MM SPPoint.c" to see the dependencies
+SPConfig.o: SPConfig.c SPConfig.h SPLogger.h
+	$(CC) $(C_COMP_FLAG) -c $*.c
+SPLogger.o: SPLogger.c SPLogger.h
+	$(CC) $(C_COMP_FLAG) -c $*.c
 SPPoint.o: SPPoint.c SPPoint.h 
 	$(CC) $(C_COMP_FLAG) -c $*.c
+	
 clean:
 	rm -f $(OBJS) $(EXEC)
+	
+#a rule for building a simple c++ source file
+#use g++ -MM SPImageProc.cpp to see dependencies
+#a rule for building a simple c source file
+#use "gcc -MM SPPoint.c" to see the dependencies
