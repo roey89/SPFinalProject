@@ -17,7 +17,12 @@
 //File open mode
 #define SP_CONFIG_OPEN_MODE "r"
 
-// default values
+//Error messages
+#define INVALID_LINE_STRING "File: %s\nLine: %d\nMessage: Invalid configuration line"
+#define CONSTRAINT_NOT_MET_STRING "File: %s\nLine: %d\nMessage: Invalid value - constraint not met"
+#define PARAMETER_NOT_SET_STRING "File: %s\nLine: %d\nMessage: Parameter %s is not set"
+
+//Default values
 #define spPCADimension_DEFAULT 20
 #define spPCAFilename_DEFAULT "pca.yml"
 #define spNumOfFeatures_DEFAULT 100
@@ -44,7 +49,7 @@ bool spExtractionModeConstraint(bool extractionMode);
 bool spNumOfSimilarImagesConstraint(int numOfSimilarImages);
 bool spKDTreeSplitMethodConstraint(SP_CONFIG_SPLIT_METHOD method);
 bool spKNNConstraint(int spKNN);
-bool spMinimalGUI(bool minimalGUI);
+bool spMinimalGUIConstraint(bool minimalGUI);
 bool spLoggerLevelConstraint(int level);
 bool spLoggerFilenameConstraint(char* filename);
 
@@ -102,8 +107,8 @@ SPConfig spConfigCreate(const char* filename, SP_CONFIG_MSG* msg) {
 	// going over the file
 	char currChar, line[MAX_STRING_SIZE];
 	int charNum, lineNum = 0;
-	bool spImagesDirectorySet, spImagesPrefixSet, spImagesSuffixSet,
-			spNumOfImagesSet;
+	bool spImagesDirectorySet = false, spImagesPrefixSet = false,
+			spImagesSuffixSet = false, spNumOfImagesSet = false;
 
 	while (!feof(fp)) {
 		charNum = 0;
@@ -112,19 +117,50 @@ SPConfig spConfigCreate(const char* filename, SP_CONFIG_MSG* msg) {
 			line[charNum++] = currChar;
 		}
 		if (!isValidConfigLine(line)) {
-			free(config);
-			config = NULL;
-			*msg = SP_CONFIG_INVALID_LINE;
+			spConfigDestroy(config);
 			spLoggerDestroy();
-			printf("File: %s\nLine: %d\nMessage: Invalid configuration line",
-					filename, lineNum);
+			*msg = SP_CONFIG_INVALID_LINE;
+			printf(INVALID_LINE_STRING, filename, lineNum);
 			return NULL;
+		}
+		if (!spImagesDirectorySet) {
+			spConfigDestroy(config);
+			spLoggerDestroy();
+			*msg = SP_CONFIG_MISSING_DIR;
+			printf("File: %s\nLine: %d\nMessage: Parameter %s is not set",
+					filename, lineNum, "spImagesDirectory");
+			return NULL;
+		}
+		if (!spImagesPrefixSet) {
+			spConfigDestroy(config);
+			spLoggerDestroy();
+			*msg = SP_CONFIG_MISSING_PREFIX;
+			printf("File: %s\nLine: %d\nMessage: Parameter %s is not set",
+					filename, lineNum, "spImagesPrefix");
+
+		}
+		if (!spImagesSuffixSet) {
+			*msg = SP_CONFIG_MISSING_SUFFIX;
+			spConfigDestroy(config);
+			spLoggerDestroy();
+			*msg = SP_CONFIG_MISSING_SUFFIX;
+			printf("File: %s\nLine: %d\nMessage: Parameter %s is not set",
+					filename, lineNum, "spImagesSuffix");
+
+		}
+		if (!spNumOfImagesSet) {
+			*msg = SP_CONFIG_MISSING_NUM_IMAGES;
+			spConfigDestroy(config);
+			spLoggerDestroy();
+			*msg = SP_CONFIG_MISSING_NUM_IMAGES;
+			printf("File: %s\nLine: %d\nMessage: Parameter %s is not set",
+					filename, lineNum, "spNumOfImages");
 		}
 
 	}
 	fread(line, sizeof(char), MAX_STRING_SIZE, fp);
 	*msg = SP_CONFIG_SUCCESS;
-	// TODO complete
+// TODO complete
 	return NULL;
 }
 
@@ -186,7 +222,7 @@ SP_CONFIG_MSG spConfigGetImagePath(char* imagePath, const SPConfig config,
 	if (index >= config->spNumOfImages) {
 		return SP_CONFIG_INDEX_OUT_OF_RANGE;
 	}
-	// We assume imagePath has enough space in it
+// We assume imagePath has enough space in it
 	sprintf(imagePath, "%s%s%d%s", config->spImagesDirectory,
 			config->spImagesPrefix, index, config->spImagesSuffix);
 	return SP_CONFIG_SUCCESS;
@@ -196,7 +232,7 @@ SP_CONFIG_MSG spConfigGetPCAPath(char* pcaPath, const SPConfig config) {
 	if (!pcaPath || !config) {
 		return SP_CONFIG_INVALID_ARGUMENT;
 	}
-	// We assume pcaPath has enough space in it
+// We assume pcaPath has enough space in it
 	sprintf(pcaPath, "%s%s", config->spImagesDirectory, config->spPCAFilename);
 	return SP_CONFIG_SUCCESS;
 }
