@@ -127,10 +127,9 @@ SP_CONFIG_MSG spConfigGetImagePath(char* imagePath, const SPConfig config,
 	if (index >= config->spNumOfImages) {
 		return SP_CONFIG_INDEX_OUT_OF_RANGE;
 	}
-	if (sprintf(imagePath, "%s%s%d%s", config->spImagesDirectory,
-			config->spImagesPrefix, index, config->spImagesSuffix) < 0) {
-		return SP_CONFIG_POINTER_OUT_OF_SPACE; // TODO: check this. might be wrong
-	}
+	// We assume imagePath has enough space in it
+	sprintf(imagePath, "%s%s%d%s", config->spImagesDirectory,
+			config->spImagesPrefix, index, config->spImagesSuffix);
 	return SP_CONFIG_SUCCESS;
 }
 
@@ -138,10 +137,8 @@ SP_CONFIG_MSG spConfigGetPCAPath(char* pcaPath, const SPConfig config) {
 	if (!pcaPath || !config) {
 		return SP_CONFIG_INVALID_ARGUMENT;
 	}
-	if (sprintf(pcaPath, "%s%s", config->spImagesDirectory,
-			config->spPCAFilename) < 0) {
-		return SP_CONFIG_POINTER_OUT_OF_SPACE; // TODO: check this. might be wrong
-	}
+	// We assume pcaPath has enough space in it
+	sprintf(pcaPath, "%s%s", config->spImagesDirectory, config->spPCAFilename);
 	return SP_CONFIG_SUCCESS;
 }
 
