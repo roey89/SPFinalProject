@@ -172,8 +172,5 @@ bool isValidConfigLine(const char* line) {
 	}
 	for (i = 0; isspace(line[i]); i++) {
 	}
-	if (line[i] != '\0' && line[i] != '#') {
-		return false;
-	}
-	return true;
+	return (line[i] == '\0' || line[i] == '#');
 }
