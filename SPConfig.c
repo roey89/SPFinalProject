@@ -123,45 +123,47 @@ SPConfig spConfigCreate(const char* filename, SP_CONFIG_MSG* msg) {
 			printf(INVALID_LINE_STRING, filename, lineNum);
 			return NULL;
 		}
-		if (!spImagesDirectorySet) {
-			spConfigDestroy(config);
-			spLoggerDestroy();
-			*msg = SP_CONFIG_MISSING_DIR;
-			printf("File: %s\nLine: %d\nMessage: Parameter %s is not set",
-					filename, lineNum, "spImagesDirectory");
-			return NULL;
-		}
-		if (!spImagesPrefixSet) {
-			spConfigDestroy(config);
-			spLoggerDestroy();
-			*msg = SP_CONFIG_MISSING_PREFIX;
-			printf("File: %s\nLine: %d\nMessage: Parameter %s is not set",
-					filename, lineNum, "spImagesPrefix");
+	}
 
-		}
-		if (!spImagesSuffixSet) {
-			*msg = SP_CONFIG_MISSING_SUFFIX;
-			spConfigDestroy(config);
-			spLoggerDestroy();
-			*msg = SP_CONFIG_MISSING_SUFFIX;
-			printf("File: %s\nLine: %d\nMessage: Parameter %s is not set",
-					filename, lineNum, "spImagesSuffix");
-
-		}
-		if (!spNumOfImagesSet) {
-			*msg = SP_CONFIG_MISSING_NUM_IMAGES;
-			spConfigDestroy(config);
-			spLoggerDestroy();
-			*msg = SP_CONFIG_MISSING_NUM_IMAGES;
-			printf("File: %s\nLine: %d\nMessage: Parameter %s is not set",
-					filename, lineNum, "spNumOfImages");
-		}
+	//Check if variables without default values has been set
+	if (!spImagesDirectorySet) {
+		spConfigDestroy(config);
+		spLoggerDestroy();
+		*msg = SP_CONFIG_MISSING_DIR;
+		printf("File: %s\nLine: %d\nMessage: Parameter %s is not set", filename,
+				lineNum, "spImagesDirectory");
+		return NULL;
+	}
+	if (!spImagesPrefixSet) {
+		spConfigDestroy(config);
+		spLoggerDestroy();
+		*msg = SP_CONFIG_MISSING_PREFIX;
+		printf("File: %s\nLine: %d\nMessage: Parameter %s is not set", filename,
+				lineNum, "spImagesPrefix");
 
 	}
+	if (!spImagesSuffixSet) {
+		*msg = SP_CONFIG_MISSING_SUFFIX;
+		spConfigDestroy(config);
+		spLoggerDestroy();
+		*msg = SP_CONFIG_MISSING_SUFFIX;
+		printf("File: %s\nLine: %d\nMessage: Parameter %s is not set", filename,
+				lineNum, "spImagesSuffix");
+
+	}
+	if (!spNumOfImagesSet) {
+		*msg = SP_CONFIG_MISSING_NUM_IMAGES;
+		spConfigDestroy(config);
+		spLoggerDestroy();
+		*msg = SP_CONFIG_MISSING_NUM_IMAGES;
+		printf("File: %s\nLine: %d\nMessage: Parameter %s is not set", filename,
+				lineNum, "spNumOfImages");
+	}
+
 	fread(line, sizeof(char), MAX_STRING_SIZE, fp);
 	*msg = SP_CONFIG_SUCCESS;
-// TODO complete
-	return NULL;
+	// TODO complete
+	return config;
 }
 
 bool spConfigIsExtractionMode(const SPConfig config, SP_CONFIG_MSG* msg) {
