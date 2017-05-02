@@ -83,6 +83,7 @@ typedef struct sp_config_t {
 } SPInnerConfig;
 
 SPConfig spConfigCreate(const char* filename, SP_CONFIG_MSG* msg) {
+	// TODO Add macros and auxiliary functions!
 	assert(msg != NULL);
 
 	if (!filename) {
@@ -398,10 +399,10 @@ SPConfig spConfigCreate(const char* filename, SP_CONFIG_MSG* msg) {
 	}
 
 	fclose(fp);
+	free(line);
 
 	//Check if variables without default values has been set
 	if (!spImagesDirectorySet) {
-		free(line);
 		fclose(fp);
 		spConfigDestroy(config);
 		spLoggerDestroy();
@@ -411,7 +412,6 @@ SPConfig spConfigCreate(const char* filename, SP_CONFIG_MSG* msg) {
 		return NULL;
 	}
 	if (!spImagesPrefixSet) {
-		free(line);
 		fclose(fp);
 		spConfigDestroy(config);
 		spLoggerDestroy();
@@ -421,7 +421,6 @@ SPConfig spConfigCreate(const char* filename, SP_CONFIG_MSG* msg) {
 
 	}
 	if (!spImagesSuffixSet) {
-		free(line);
 		fclose(fp);
 		spConfigDestroy(config);
 		spLoggerDestroy();
@@ -431,7 +430,6 @@ SPConfig spConfigCreate(const char* filename, SP_CONFIG_MSG* msg) {
 
 	}
 	if (!spNumOfImagesSet) {
-		free(line);
 		fclose(fp);
 		spConfigDestroy(config);
 		spLoggerDestroy();
