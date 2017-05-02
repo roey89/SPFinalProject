@@ -35,8 +35,11 @@
 #define spLoggerFilename_DEFAULT "stdout"
 
 bool isValidConfigLine(const char* line);
+char* getVariableName(const char* line);
+char* getVariableValue(const char* line);
 
 // Constraints
+bool positiveNum(int num);
 bool noSpacesString(char* str);
 bool spImagesDirectoryConstraint(char* directory);
 bool spImagesPrefixConstraint(char* prefix);
@@ -105,12 +108,13 @@ SPConfig spConfigCreate(const char* filename, SP_CONFIG_MSG* msg) {
 	config->spLoggerFilename = spLoggerFilename_DEFAULT;
 
 	// going over the file
-	char currChar, line[MAX_STRING_SIZE];
+	char currChar, *line = (char*) calloc(MAX_STRING_SIZE, sizeof(char));
 	int charNum, lineNum = 0;
 	bool spImagesDirectorySet = false, spImagesPrefixSet = false,
 			spImagesSuffixSet = false, spNumOfImagesSet = false;
 
 	while (!feof(fp)) {
+		line = "";
 		charNum = 0;
 		lineNum++;
 		while (!feof(fp) && (currChar = fgetc(fp)) != '\n') {
@@ -122,6 +126,24 @@ SPConfig spConfigCreate(const char* filename, SP_CONFIG_MSG* msg) {
 			*msg = SP_CONFIG_INVALID_LINE;
 			printf(INVALID_LINE_STRING, filename, lineNum);
 			return NULL;
+		}
+
+		char* variable = getVariableName(line);
+		if (variable) { //If line is not a comment or empty
+			if (strcmp(variable, " ") == 0) {
+				spConfigDestroy(config);
+				spLoggerDestroy();
+				*msg = SP_CONFIG_ALLOC_FAIL;
+				return NULL;
+			}
+			char* value = getVariableValue(line);
+			if (strcmp(value, " ") == 0) {
+				free(variable);
+				spConfigDestroy(config);
+				spLoggerDestroy();
+				*msg = SP_CONFIG_ALLOC_FAIL;
+				return NULL;
+			}
 		}
 	}
 
@@ -246,7 +268,7 @@ bool isValidConfigLine(const char* line) {
 	int i = 0;
 	for (; isspace(line[i]); i++) {
 	}
-	if (line[i] == '\0' || line[i] == '#') { // if line contains only spaces and a comment
+	if (line[i] == '\0' || line[i] == '\n' || line[i] == '#') { // if line contains only spaces and a comment
 		return true;
 	}
 	char variable[MAX_STRING_SIZE], value[MAX_STRING_SIZE];
@@ -272,10 +294,56 @@ bool isValidConfigLine(const char* line) {
 	}
 	for (i = 0; isspace(line[i]); i++) {
 	}
-	return (line[i] == '\0' || line[i] == '#');
+	return (line[i] == '\0' || line[i] == '\n' || line[i] == '#');
 }
 
-// Constraints
+char* getVariableName(const char* line) {
+	// We assume line is valid
+	int i = 0;
+	for (; isspace(line[i]); i++) {
+	}
+	if (line[i] == '\0' || line[i] == '\n' || line[i] == '#') { // if line contains only spaces and a comment
+		return NULL;
+	}
+	char* variable = (char*) calloc(MAX_STRING_SIZE, sizeof(char));
+	if (!variable) {
+		return "";
+	}
+	for (int j = 0; !isspace(line[i]); i++, j++) { // we reached the variable
+		variable[j] = line[i];
+	}
+	return variable;
+}
+
+char* getVariableValue(const char* line) {
+	int i = 0;
+	for (; isspace(line[i]); i++) {
+	}
+	if (line[i] == '\0' || line[i] == '\n' || line[i] == '#') { // if line contains only spaces and a comment
+		return NULL;
+	}
+	char* value = (char*) calloc(MAX_STRING_SIZE, sizeof(char));
+	if (!value) {
+		return "";
+	}
+	for (int j = 0; !isspace(line[i]); i++, j++) { // we reached the variable
+	}
+	for (; line[i] != '='; i++) {
+	}
+	for (; isspace(line[i]); i++) {
+	}
+	for (int j = 0; !isspace(line[i]); i++, j++) {
+		value[j] = line[i];
+	}
+	if (strlen(value) == 0) {
+		return NULL;
+	}
+	return value;
+}
+
+/////////////////
+// Constraints //
+/////////////////
 
 bool noSpacesString(char* str) {
 	for (int i = 0; i < strlen(str); i++) {
@@ -289,12 +357,15 @@ bool noSpacesString(char* str) {
 bool positiveNum(int num) {
 	return num > 0;
 }
+
 bool spImagesDirectoryConstraint(char* directory) {
 	return noSpacesString(directory);
 }
+
 bool spImagesPrefixConstraint(char* prefix) {
 	return noSpacesString(prefix);
 }
+
 bool spImagesSuffixConstraint(char* suffix) {
 	char* arr[4] = { ".jpg", ".png", ".bmp", ".gif" };
 	for (int i = 0; i < 4; i++) {
@@ -304,36 +375,47 @@ bool spImagesSuffixConstraint(char* suffix) {
 	}
 	return false;
 }
+
 bool spNumOfImagesConstraint(int numOfImages) {
 	return positiveNum(numOfImages);
 }
+
 bool spPCADimensionConstraint(int dim) {
 	return dim >= 10 && dim <= 28;
 }
+
 bool spPCAFilenameConstraint(char* filename) {
 	return noSpacesString(filename);
 }
+
 bool spNumOfFeaturesConstraint(int numOfFeatures) {
 	return positiveNum(numOfFeatures);
 }
+
 bool spExtractionModeConstraint(bool extractionMode) { // just for clarification
 	return true;
 }
+
 bool spNumOfSimilarImagesConstraint(int numOfSimilarImages) {
 	return positiveNum(numOfSimilarImages);
 }
+
 bool spKDTreeSplitMethodConstraint(SP_CONFIG_SPLIT_METHOD method) { // just for clarification
 	return true;
 }
+
 bool spKNNConstraint(int spKNN) {
 	return positiveNum(spKNN);
 }
+
 bool spMinimalGUIConstraint(bool minimalGUI) { // just for clarification
 	return true;
 }
+
 bool spLoggerLevelConstraint(int level) {
 	return level >= 1 && level <= 4;
 }
+
 bool spLoggerFilenameConstraint(char* filename) {
 	return noSpacesString(filename);
 }
