@@ -20,7 +20,6 @@
 //Error messages
 #define INVALID_LINE_STRING "File: %s\nLine: %d\nMessage: Invalid configuration line"
 #define CONSTRAINT_NOT_MET_STRING "File: %s\nLine: %d\nMessage: Invalid value - constraint not met"
-#define INVALID_VARIABLE_STRING "File: %s\nLine: %d\nMessage: Invalid variable - the variable %s does not exist in the config"
 #define PARAMETER_NOT_SET_STRING "File: %s\nLine: %d\nMessage: Parameter %s is not set"
 
 //Default values
@@ -37,7 +36,7 @@
 
 bool isValidConfigLine(const char* line);
 void setConfigDefaultValues(SPConfig config);
-void freeBeforeExit(SPConfig config, FILE* fp, char* line, char* variable,
+void freeBeforeExit(SPConfig config, FILE* file, char* line, char* variable,
 		char* value);
 
 //Getters
@@ -100,9 +99,9 @@ void setConfigDefaultValues(SPConfig config) {
 	config->spLoggerFilename = spLoggerFilename_DEFAULT;
 }
 
-void freeBeforeExit(SPConfig config, FILE* fp, char* line, char* variable,
+void freeBeforeExit(SPConfig config, FILE* file, char* line, char* variable,
 		char* value) {
-	fclose(fp);
+	fclose(file);
 	spConfigDestroy(config);
 	spLoggerDestroy();
 	free(line);
@@ -338,9 +337,9 @@ SPConfig spConfigCreate(const char* filename, SP_CONFIG_MSG* msg) {
 				return NULL;
 			}
 		} else { // variable is invalid
-			printf(INVALID_VARIABLE_STRING, filename, lineNum, variable);
 			freeBeforeExit(config, fp, line, variable, value);
-			*msg = SP_CONFIG_INVALID_VARIABLE_NAME;
+			printf(INVALID_LINE_STRING, filename, lineNum);
+			*msg = SP_CONFIG_INVALID_LINE;
 			return NULL;
 		}
 		free(variable);
