@@ -516,6 +516,15 @@ SP_CONFIG_MSG spConfigGetPCAPath(char* pcaPath, const SPConfig config) {
 }
 
 void spConfigDestroy(SPConfig config) {
+	if (!config) {
+		return;
+	}
+	free(config->spImagesDirectory);
+	free(config->spImagesPrefix);
+	free(config->spImagesSuffix);
+	free(config->spPCAFilename);
+	free(config->spLoggerFilename);
+	free(config);
 }
 
 bool isValidConfigLine(const char* line) {
