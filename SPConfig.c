@@ -20,6 +20,7 @@
 //Error messages
 #define INVALID_LINE_STRING "File: %s\nLine: %d\nMessage: Invalid configuration line"
 #define CONSTRAINT_NOT_MET_STRING "File: %s\nLine: %d\nMessage: Invalid value - constraint not met"
+#define INVALID_VARIABLE_STRING "File: %s\nLine: %d\nMessage: Invalid variable - the variable %s does not exist in the config"
 #define PARAMETER_NOT_SET_STRING "File: %s\nLine: %d\nMessage: Parameter %s is not set"
 
 //Default values
@@ -35,6 +36,9 @@
 #define spLoggerFilename_DEFAULT "stdout"
 
 bool isValidConfigLine(const char* line);
+void setConfigDefaultValues(SPConfig config);
+void freeBeforeExit(SPConfig config, FILE* fp, char* line, char* variable,
+		char* value);
 
 //Getters
 char* getVariableName(const char* line);
@@ -82,27 +86,7 @@ typedef struct sp_config_t {
 	char* spLoggerFilename;
 } SPInnerConfig;
 
-SPConfig spConfigCreate(const char* filename, SP_CONFIG_MSG* msg) {
-	// TODO Add macros and auxiliary functions!
-	assert(msg != NULL);
-
-	if (!filename) {
-		*msg = SP_CONFIG_INVALID_ARGUMENT;
-		return NULL;
-	}
-
-	FILE * fp = fopen(filename, SP_CONFIG_OPEN_MODE);
-	if (!fp) {
-		*msg = SP_CONFIG_CANNOT_OPEN_FILE;
-		return NULL;
-	}
-
-	SPConfig config = (SPConfig) malloc(sizeof(SPInnerConfig));
-	if (!config) {
-		*msg = SP_CONFIG_ALLOC_FAIL;
-		return NULL;
-	}
-
+void setConfigDefaultValues(SPConfig config) {
 	// setting default values
 	config->spPCADimension = spPCADimension_DEFAULT;
 	config->spPCAFilename = spPCAFilename_DEFAULT;
@@ -114,8 +98,49 @@ SPConfig spConfigCreate(const char* filename, SP_CONFIG_MSG* msg) {
 	config->spMinimalGUI = spMinimalGUI_DEFAULT;
 	config->spLoggerLevel = spLoggerLevel_DEFAULT;
 	config->spLoggerFilename = spLoggerFilename_DEFAULT;
+}
+
+void freeBeforeExit(SPConfig config, FILE* fp, char* line, char* variable,
+		char* value) {
+	fclose(fp);
+	spConfigDestroy(config);
+	spLoggerDestroy();
+	free(line);
+	free(variable);
+	free(value);
+}
+
+SPConfig spConfigCreate(const char* filename, SP_CONFIG_MSG* msg) {
+	// TODO Add macros and auxiliary functions!
+	assert(msg != NULL);
+
+	if (!filename) {
+		spLoggerDestroy();
+		*msg = SP_CONFIG_INVALID_ARGUMENT;
+		return NULL;
+	}
+
+	FILE * fp = fopen(filename, SP_CONFIG_OPEN_MODE);
+	if (!fp) {
+		spLoggerDestroy();
+		*msg = SP_CONFIG_CANNOT_OPEN_FILE;
+		return NULL;
+	}
+
+	SPConfig config = (SPConfig) malloc(sizeof(SPInnerConfig));
+	if (!config) {
+		fclose(fp);
+		spLoggerDestroy();
+		*msg = SP_CONFIG_ALLOC_FAIL;
+		return NULL;
+	}
+
+	setConfigDefaultValues(config);	//setting default values
 
 	// going over the file
+	int charNum, lineNum = 0;
+	bool spImagesDirectorySet = false, spImagesPrefixSet = false,
+			spImagesSuffixSet = false, spNumOfImagesSet = false;
 	char currChar, *line = (char*) calloc(MAX_STRING_SIZE, sizeof(char));
 	if (!line) {
 		fclose(fp);
@@ -124,9 +149,6 @@ SPConfig spConfigCreate(const char* filename, SP_CONFIG_MSG* msg) {
 		*msg = SP_CONFIG_ALLOC_FAIL;
 		return NULL;
 	}
-	int charNum, lineNum = 0;
-	bool spImagesDirectorySet = false, spImagesPrefixSet = false,
-			spImagesSuffixSet = false, spNumOfImagesSet = false;
 
 	while (!feof(fp)) {
 		line = "";
@@ -173,229 +195,155 @@ SPConfig spConfigCreate(const char* filename, SP_CONFIG_MSG* msg) {
 		}
 
 		if (strcmp(variable, "spImagesDirectory") == 0) {
-			free(variable);
 			if (spImagesDirectoryConstraint(value)) {
 				config->spImagesDirectory = value;
 				spImagesDirectorySet = true;
 			} else {
-				free(line);
-				free(value);
-				fclose(fp);
-				spConfigDestroy(config);
-				spLoggerDestroy();
+				freeBeforeExit(config, fp, line, variable, value);
 				*msg = SP_CONFIG_INVALID_STRING;
 				printf(CONSTRAINT_NOT_MET_STRING, filename, lineNum);
 				return NULL;
 			}
 		} else if (strcmp(variable, "spImagesPrefix") == 0) {
-			free(variable);
 			if (spImagesPrefixConstraint(value)) {
 				config->spImagesPrefix = value;
 				spImagesPrefixSet = true;
 			} else {
-				free(line);
-				free(value);
-				fclose(fp);
-				spConfigDestroy(config);
-				spLoggerDestroy();
+				freeBeforeExit(config, fp, line, variable, value);
 				*msg = SP_CONFIG_INVALID_STRING;
 				printf(CONSTRAINT_NOT_MET_STRING, filename, lineNum);
 				return NULL;
 			}
 		} else if (strcmp(variable, "spImagesSuffix") == 0) {
-			free(variable);
 			if (spImagesSuffixConstraint(value)) {
 				config->spImagesSuffix = value;
 				spImagesSuffixSet = true;
 			} else {
-				free(line);
-				free(value);
-				fclose(fp);
-				spConfigDestroy(config);
-				spLoggerDestroy();
+				freeBeforeExit(config, fp, line, variable, value);
 				*msg = SP_CONFIG_INVALID_STRING;
 				printf(CONSTRAINT_NOT_MET_STRING, filename, lineNum);
 				return NULL;
 			}
 		} else if (strcmp(variable, "spNumOfImages") == 0) {
-			free(variable);
 			if (spNumOfImagesConstraint(atoi(value))) {
 				config->spNumOfImages = atoi(value);
 				free(value);
 				spNumOfImagesSet = true;
 			} else {
-				free(line);
-				free(value);
-				fclose(fp);
-				spConfigDestroy(config);
-				spLoggerDestroy();
+				freeBeforeExit(config, fp, line, variable, value);
 				*msg = SP_CONFIG_INVALID_INTEGER;
 				printf(CONSTRAINT_NOT_MET_STRING, filename, lineNum);
 				return NULL;
 			}
 		} else if (strcmp(variable, "spPCADimension") == 0) {
-			free(variable);
 			if (spPCADimensionConstraint(atoi(value))) {
 				config->spPCADimension = atoi(value);
 				free(value);
 			} else {
-				free(line);
-				free(value);
-				fclose(fp);
-				spConfigDestroy(config);
-				spLoggerDestroy();
+				freeBeforeExit(config, fp, line, variable, value);
 				*msg = SP_CONFIG_INVALID_INTEGER;
 				printf(CONSTRAINT_NOT_MET_STRING, filename, lineNum);
 				return NULL;
 			}
 
 		} else if (strcmp(variable, "spPCAFilename") == 0) {
-			free(variable);
 			if (spPCAFilenameConstraint(value)) {
 				config->spPCAFilename = value;
 			} else {
-				free(line);
-				free(value);
-				fclose(fp);
-				spConfigDestroy(config);
-				spLoggerDestroy();
+				freeBeforeExit(config, fp, line, variable, value);
 				*msg = SP_CONFIG_INVALID_STRING;
 				printf(CONSTRAINT_NOT_MET_STRING, filename, lineNum);
 				return NULL;
 			}
 		} else if (strcmp(variable, "spNumOfFeatures") == 0) {
-			free(variable);
 			if (spNumOfFeaturesConstraint(atoi(value))) {
 				config->spNumOfFeatures = atoi(value);
 				free(value);
 			} else {
-				free(line);
-				free(value);
-				fclose(fp);
-				spConfigDestroy(config);
-				spLoggerDestroy();
+				freeBeforeExit(config, fp, line, variable, value);
 				*msg = SP_CONFIG_INVALID_INTEGER;
 				printf(CONSTRAINT_NOT_MET_STRING, filename, lineNum);
 				return NULL;
 			}
 
 		} else if (strcmp(variable, "spExtractionMode") == 0) {
-			free(variable);
 			if (spExtractionModeConstraint(value)) {
 				config->spExtractionMode = booleanParser(value);
 				free(value);
 			} else {
-				free(line);
-				free(value);
-				fclose(fp);
-				spConfigDestroy(config);
-				spLoggerDestroy();
+				freeBeforeExit(config, fp, line, variable, value);
 				*msg = SP_CONFIG_INVALID_BOOLEAN;
 				printf(CONSTRAINT_NOT_MET_STRING, filename, lineNum);
 				return NULL;
 			}
 
 		} else if (strcmp(variable, "spNumOfSimilarImages") == 0) {
-			free(variable);
 			if (spNumOfSimilarImagesConstraint(atoi(value))) {
 				config->spNumOfSimilarImages = atoi(value);
 				free(value);
 			} else {
-				free(line);
-				free(value);
-				fclose(fp);
-				spConfigDestroy(config);
-				spLoggerDestroy();
+				freeBeforeExit(config, fp, line, variable, value);
 				*msg = SP_CONFIG_INVALID_INTEGER;
 				printf(CONSTRAINT_NOT_MET_STRING, filename, lineNum);
 				return NULL;
 			}
 
 		} else if (strcmp(variable, "spKDTreeSplitMethod") == 0) {
-			free(variable);
 			if (spKDTreeSplitMethodConstraint(value)) {
 				config->spMinimalGUI = spKDTreeSplitMethodParser(value);
 				free(value);
 			} else {
-				free(line);
-				free(value);
-				fclose(fp);
-				spConfigDestroy(config);
-				spLoggerDestroy();
+				freeBeforeExit(config, fp, line, variable, value);
 				*msg = SP_CONFIG_INVALID_SPLIT_METHOD;
 				printf(CONSTRAINT_NOT_MET_STRING, filename, lineNum);
 				return NULL;
 			}
 		} else if (strcmp(variable, "spKNN") == 0) {
-			free(variable);
 			if (spKNNConstraint(atoi(value))) {
 				config->spKNN = atoi(value);
 				free(value);
 			} else {
-				free(line);
-				free(value);
-				fclose(fp);
-				spConfigDestroy(config);
-				spLoggerDestroy();
+				freeBeforeExit(config, fp, line, variable, value);
 				*msg = SP_CONFIG_INVALID_INTEGER;
 				printf(CONSTRAINT_NOT_MET_STRING, filename, lineNum);
 				return NULL;
 			}
 		} else if (strcmp(variable, "spMinimalGUI") == 0) {
-			free(variable);
 			if (spMinimalGUIConstraint(value)) {
 				config->spMinimalGUI = booleanParser(value);
 				free(value);
 			} else {
-				free(line);
-				free(value);
-				fclose(fp);
-				spConfigDestroy(config);
-				spLoggerDestroy();
+				freeBeforeExit(config, fp, line, variable, value);
 				*msg = SP_CONFIG_INVALID_BOOLEAN;
 				printf(CONSTRAINT_NOT_MET_STRING, filename, lineNum);
 				return NULL;
 			}
 		} else if (strcmp(variable, "spLoggerLevel") == 0) {
-			free(variable);
 			if (spLoggerLevelConstraint(atoi(value))) {
 				config->spLoggerLevel = atoi(value);
 				free(value);
 			} else {
-				free(line);
-				free(value);
-				fclose(fp);
-				spConfigDestroy(config);
-				spLoggerDestroy();
+				freeBeforeExit(config, fp, line, variable, value);
 				*msg = SP_CONFIG_INVALID_INTEGER;
 				printf(CONSTRAINT_NOT_MET_STRING, filename, lineNum);
 				return NULL;
 			}
 		} else if (strcmp(variable, "spLoggerFilename") == 0) {
-			free(variable);
 			if (spPCAFilenameConstraint(value)) {
 				config->spLoggerFilename = value;
 			} else {
-				free(line);
-				free(value);
-				fclose(fp);
-				spConfigDestroy(config);
-				spLoggerDestroy();
+				freeBeforeExit(config, fp, line, variable, value);
 				*msg = SP_CONFIG_INVALID_STRING;
 				printf(CONSTRAINT_NOT_MET_STRING, filename, lineNum);
 				return NULL;
 			}
 		} else { // variable is invalid
-			free(line);
-			free(variable);
-			free(value);
-			fclose(fp);
-			spConfigDestroy(config);
-			spLoggerDestroy();
+			printf(INVALID_VARIABLE_STRING, filename, lineNum, variable);
+			freeBeforeExit(config, fp, line, variable, value);
 			*msg = SP_CONFIG_INVALID_VARIABLE_NAME;
-			printf(CONSTRAINT_NOT_MET_STRING, filename, lineNum);
 			return NULL;
 		}
+		free(variable);
 	}
 
 	fclose(fp);
@@ -403,39 +351,34 @@ SPConfig spConfigCreate(const char* filename, SP_CONFIG_MSG* msg) {
 
 	//Check if variables without default values has been set
 	if (!spImagesDirectorySet) {
-		fclose(fp);
 		spConfigDestroy(config);
 		spLoggerDestroy();
 		*msg = SP_CONFIG_MISSING_DIR;
-		printf("File: %s\nLine: %d\nMessage: Parameter %s is not set", filename,
-				lineNum, "spImagesDirectory");
+		printf(PARAMETER_NOT_SET_STRING, filename, lineNum,
+				"spImagesDirectory");
 		return NULL;
 	}
 	if (!spImagesPrefixSet) {
-		fclose(fp);
 		spConfigDestroy(config);
 		spLoggerDestroy();
 		*msg = SP_CONFIG_MISSING_PREFIX;
-		printf("File: %s\nLine: %d\nMessage: Parameter %s is not set", filename,
-				lineNum, "spImagesPrefix");
+		printf(PARAMETER_NOT_SET_STRING, filename, lineNum, "spImagesPrefix");
+		return NULL;
 
 	}
 	if (!spImagesSuffixSet) {
-		fclose(fp);
 		spConfigDestroy(config);
 		spLoggerDestroy();
 		*msg = SP_CONFIG_MISSING_SUFFIX;
-		printf("File: %s\nLine: %d\nMessage: Parameter %s is not set", filename,
-				lineNum, "spImagesSuffix");
-
+		printf(PARAMETER_NOT_SET_STRING, filename, lineNum, "spImagesSuffix");
+		return NULL;
 	}
 	if (!spNumOfImagesSet) {
-		fclose(fp);
 		spConfigDestroy(config);
 		spLoggerDestroy();
 		*msg = SP_CONFIG_MISSING_NUM_IMAGES;
-		printf("File: %s\nLine: %d\nMessage: Parameter %s is not set", filename,
-				lineNum, "spNumOfImages");
+		printf(PARAMETER_NOT_SET_STRING, filename, lineNum, "spNumOfImages");
+		return NULL;
 	}
 
 	*msg = SP_CONFIG_SUCCESS;
