@@ -19,15 +19,16 @@ typedef enum sp_config_msg_t {
 	SP_CONFIG_INVALID_INTEGER,
 	SP_CONFIG_INVALID_STRING,
 	SP_CONFIG_INVALID_ARGUMENT,
+	SP_CONFIG_INVALID_BOOLEAN,
+	SP_CONFIG_INVALID_SPLIT_METHOD,
+	SP_CONFIG_INVALID_VARIABLE_NAME,
 	SP_CONFIG_INVALID_LINE,
 	SP_CONFIG_INDEX_OUT_OF_RANGE,
 	SP_CONFIG_SUCCESS
 } SP_CONFIG_MSG;
 
 typedef enum sp_config_split_method_t {
-	RANDOM,
-	MAX_SPREAD,
-	INCREMENTAL
+	RANDOM, MAX_SPREAD, INCREMENTAL
 } SP_CONFIG_SPLIT_METHOD;
 
 typedef struct sp_config_t* SPConfig;
@@ -48,6 +49,10 @@ typedef struct sp_config_t* SPConfig;
  * - SP_CONFIG_ALLOC_FAIL - if an allocation failure occurred
  * - SP_CONFIG_INVALID_INTEGER - if a line in the config file contains invalid integer
  * - SP_CONFIG_INVALID_STRING - if a line in the config file contains invalid string
+ * - SP_CONFIG_INVALID_BOOLEAN - if a line in the config file contains invalid boolean
+ * - SP_CONFIG_INVALID_SP_CONFIG_INVALID_SPLIT_METHOD - if a line in the config file contains invalid split method
+ * - SP_CONFIG_INVALID_VARIABLE_NAME - if a line in the config file has a variable that doesn't exist
+ * - SP_CONFIG_INVALID_LINE - if a line in the config file is invalid
  * - SP_CONFIG_MISSING_DIR - if spImagesDirectory is missing
  * - SP_CONFIG_MISSING_PREFIX - if spImagesPrefix is missing
  * - SP_CONFIG_MISSING_SUFFIX - if spImagesSuffix is missing 
