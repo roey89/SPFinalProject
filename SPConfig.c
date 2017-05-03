@@ -22,6 +22,13 @@
 #define CONSTRAINT_NOT_MET_STRING "File: %s\nLine: %d\nMessage: Invalid value - constraint not met"
 #define PARAMETER_NOT_SET_STRING "File: %s\nLine: %d\nMessage: Parameter %s is not set"
 
+/* #define MAP_CASE_STRING_CONSTRAINT_NOT_MET \
+	do { \
+		*msg = SP_CONFIG_INVALID_STRING; \
+		printf(CONSTRAINT_NOT_MET_STRING, filename, lineNum); \
+		return false; \
+	} while (0); */
+
 //Default values
 #define spPCADimension_DEFAULT 20
 #define spPCAFilename_DEFAULT "pca.yml"
