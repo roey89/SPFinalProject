@@ -32,6 +32,25 @@ typedef enum sp_config_split_method_t {
 
 typedef struct sp_config_t* SPConfig;
 
+typedef struct sp_config_t {
+	// no default values
+	char* spImagesDirectory;
+	char* spImagesPrefix;
+	char* spImagesSuffix;
+	int spNumOfImages;
+	// default values
+	int spPCADimension;
+	char* spPCAFilename;
+	int spNumOfFeatures;
+	bool spExtractionMode;
+	int spNumOfSimilarImages;
+	SP_CONFIG_SPLIT_METHOD spKDTreeSplitMethod;
+	int spKNN;
+	bool spMinimalGUI;
+	int spLoggerLevel;
+	char* spLoggerFilename;
+} SPConfigStruct;
+
 /**
  * Creates a new system configuration struct. The configuration struct
  * is initialized based on the configuration file given by 'filename'.

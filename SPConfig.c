@@ -48,9 +48,9 @@ bool mapVarAndValToConfig(SPConfig config, char* variable, char* value,
 		const char* filename, int lineNum, SP_CONFIG_MSG* msg,
 		bool* spImagesDirectorySet, bool* spImagesPrefixSet,
 		bool* spImagesSuffixSet, bool* spNumOfImagesSet);
-bool allVariablesSet(SPConfig config, const char* filename, int lineNum,
-		SP_CONFIG_MSG* msg, bool spImagesDirectorySet, bool spImagesPrefixSet,
-		bool spImagesSuffixSet, bool spNumOfImagesSet);
+bool allVariablesSet(const char* filename, int lineNum, SP_CONFIG_MSG* msg,
+bool spImagesDirectorySet, bool spImagesPrefixSet,
+bool spImagesSuffixSet, bool spNumOfImagesSet);
 void freeBeforeExit(SPConfig config, FILE* file, char* line, char* variable,
 		char* value);
 
@@ -81,25 +81,6 @@ bool spKNNConstraint(int spKNN);
 bool spMinimalGUIConstraint(char* minimalGUI);
 bool spLoggerLevelConstraint(int level);
 bool spLoggerFilenameConstraint(char* filename);
-
-typedef struct sp_config_t {
-	// no default values
-	char* spImagesDirectory;
-	char* spImagesPrefix;
-	char* spImagesSuffix;
-	int spNumOfImages;
-	// default values
-	int spPCADimension;
-	char* spPCAFilename;
-	int spNumOfFeatures;
-	bool spExtractionMode;
-	int spNumOfSimilarImages;
-	SP_CONFIG_SPLIT_METHOD spKDTreeSplitMethod;
-	int spKNN;
-	bool spMinimalGUI;
-	int spLoggerLevel;
-	char* spLoggerFilename;
-} SPConfigStruct;
 
 SPConfig spConfigCreate(const char* filename, SP_CONFIG_MSG* msg) {
 	assert(msg != NULL);
@@ -143,7 +124,7 @@ SPConfig spConfigCreate(const char* filename, SP_CONFIG_MSG* msg) {
 	}
 
 	while (!feof(fp)) {
-		int lineLength = strlen(line);
+		int lineLength = (int) strlen(line);
 		memset(line, '\0', lineLength);
 		charNum = 0;
 		lineNum++;
@@ -151,6 +132,7 @@ SPConfig spConfigCreate(const char* filename, SP_CONFIG_MSG* msg) {
 			line[charNum++] = currChar;
 		}
 		if (!isValidConfigLine(line)) {
+			printf("\nLine: ~%s~\n\n", line);
 			fclose(fp);
 			free(line);
 			spConfigDestroy(config);
@@ -200,7 +182,7 @@ SPConfig spConfigCreate(const char* filename, SP_CONFIG_MSG* msg) {
 	free(line);
 
 	//Check if variables without default values have been set
-	if (!allVariablesSet(config, filename, lineNum, msg, spImagesDirectorySet,
+	if (!allVariablesSet(filename, lineNum, msg, spImagesDirectorySet,
 			spImagesPrefixSet, spImagesSuffixSet, spNumOfImagesSet)) {
 		spConfigDestroy(config);
 		spLoggerDestroy();
@@ -307,34 +289,43 @@ bool isValidConfigLine(const char* line) {
 	 * value = strtok(NULL, delimeters);
 	 */
 	int i = 0;
-	for (; isspace(line[i]); i++) {
+	while (isspace(line[i])) {
+		i++;
 	}
 	if (line[i] == '\0' || line[i] == '\n' || line[i] == '#') { // if line contains only spaces and a comment
 		return true;
 	}
 	char variable[MAX_STRING_SIZE], value[MAX_STRING_SIZE];
-	for (int j = 0; !isspace(line[i]); i++, j++) { // we reached the variable
+	for (int j = 0; !isspace(line[i]) && line[i] != '\0' && line[i] != '=';
+			i++, j++) { // we reached the variable
 		variable[j] = line[i];
 	}
 	if (strlen(variable) == 0) {
+		printf("No variable found!\n");
 		return false;
 	}
-	for (; isspace(line[i]); i++) {
+	while (isspace(line[i])) {
+		i++;
 	}
 	if (line[i] != '=') {
+		printf("No = found!\n");
 		return false;
 	}
 	i++;
-	for (; isspace(line[i]); i++) {
+	while (isspace(line[i])) {
+		i++;
 	}
-	for (int j = 0; !isspace(line[i]); i++, j++) {
+	for (int j = 0; !isspace(line[i]) && line[i] != '\0'; i++, j++) {
 		value[j] = line[i];
 	}
 	if (strlen(value) == 0) {
+		printf("No value found!\n");
 		return false;
 	}
-	for (i = 0; isspace(line[i]); i++) {
+	while (isspace(line[i])) {
+		i++;
 	}
+	printf("var: %s, val: %s\n", variable, value);
 	return (line[i] == '\0' || line[i] == '\n' || line[i] == '#');
 }
 
@@ -543,12 +534,13 @@ bool mapVarAndValToConfig(SPConfig config, char* variable, char* value,
 	}
 	free(variable);
 	free(value);
+	printf("hello!\n");
 	return true;
 }
 
-bool allVariablesSet(SPConfig config, const char* filename, int lineNum,
-		SP_CONFIG_MSG* msg, bool spImagesDirectorySet, bool spImagesPrefixSet,
-		bool spImagesSuffixSet, bool spNumOfImagesSet) {
+bool allVariablesSet(const char* filename, int lineNum, SP_CONFIG_MSG* msg,
+bool spImagesDirectorySet, bool spImagesPrefixSet,
+bool spImagesSuffixSet, bool spNumOfImagesSet) {
 	//Check if variables without default values has been set
 	if (!spImagesDirectorySet) {
 		*msg = SP_CONFIG_MISSING_DIR;
@@ -641,7 +633,7 @@ bool isValidBoolean(const char* string) {
 }
 
 bool noSpacesString(char* str) {
-	for (int i = 0; i < strlen(str); i++) {
+	for (int i = 0; i < (int) strlen(str); i++) {
 		if (str[i] == ' ') {
 			return false;
 		}
@@ -654,7 +646,7 @@ bool positiveNum(int num) {
 }
 
 bool isInt(char* numString) {
-	for (int i = 0; i < strlen(numString); i++) {
+	for (int i = 0; i < (int) strlen(numString); i++) {
 		if (!isdigit(numString[i])) {
 			return false;
 		}
