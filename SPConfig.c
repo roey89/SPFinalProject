@@ -42,7 +42,7 @@
 #define spLoggerFilename_DEFAULT "stdout"
 
 //General auxiliary functions
-bool isValidConfigLine(const char* line);
+bool isValidConfigLine(char* line);
 void setConfigDefaultValues(SPConfig config);
 bool mapVarAndValToConfig(SPConfig config, char* variable, char* value,
 		const char* filename, int lineNum, SP_CONFIG_MSG* msg,
@@ -114,7 +114,7 @@ SPConfig spConfigCreate(const char* filename, SP_CONFIG_MSG* msg) {
 	int charNum, lineNum = 0;
 	bool spImagesDirectorySet = false, spImagesPrefixSet = false,
 			spImagesSuffixSet = false, spNumOfImagesSet = false;
-	char currChar, *line = (char*) calloc(MAX_STRING_SIZE, sizeof(char));
+	char currChar, *line = (char*) calloc(MAX_STRING_SIZE + 1, sizeof(char)); //+1 for null char
 	if (!line) { //If allocation failed
 		fclose(fp);
 		spConfigDestroy(config);
@@ -128,11 +128,13 @@ SPConfig spConfigCreate(const char* filename, SP_CONFIG_MSG* msg) {
 		memset(line, '\0', lineLength);
 		charNum = 0;
 		lineNum++;
-		while (!feof(fp) && (currChar = fgetc(fp)) != '\n') {
-			line[charNum++] = currChar;
-		}
+		do {
+			currChar = fgetc(fp);
+				line[charNum++] = currChar;
+		} while (currChar != '\n' && !feof(fp));
+		line[charNum--] = '\0'; // remove last character (newline or eof)
+		printf("\nLine: ~%s~\n\n", line);
 		if (!isValidConfigLine(line)) {
-			printf("\nLine: ~%s~\n\n", line);
 			fclose(fp);
 			free(line);
 			spConfigDestroy(config);
@@ -281,56 +283,55 @@ void spConfigDestroy(SPConfig config) {
 // General auxiliary functions //
 /////////////////////////////////
 
-bool isValidConfigLine(const char* line) {
-	/*
-	 * const char delimeters = " \t\n\v\f\r";
-	 * char *token;
-	 * variable = strtok(line, delimeters);
-	 * value = strtok(NULL, delimeters);
-	 */
+bool isValidConfigLine(char* line) {
+	// s*cc*s*=s*ccs*\0;
+	// s = whitespace, c = non-whitespace
+	// *=0 or more (regular expressions)
 	int i = 0;
 	while (isspace(line[i])) {
 		i++;
 	}
-	if (line[i] == '\0' || line[i] == '\n' || line[i] == '#') { // if line contains only spaces and a comment
+	if (line[i] == '\0' || line[i] == '#') { //empty or comments only
 		return true;
 	}
-	char variable[MAX_STRING_SIZE], value[MAX_STRING_SIZE];
-	for (int j = 0; !isspace(line[i]) && line[i] != '\0' && line[i] != '=';
-			i++, j++) { // we reached the variable
+	char variable[strlen(line) + 1];
+	for (int j = 0; !isspace(line[i]) && line[i] != '='; j++, i++) {
+		if (line[i] == '\0') {
+			return false;
+		}
 		variable[j] = line[i];
 	}
 	if (strlen(variable) == 0) {
-		printf("No variable found!\n");
 		return false;
 	}
-	while (isspace(line[i])) {
-		i++;
-	}
 	if (line[i] != '=') {
-		printf("No = found!\n");
+		while (isspace(line[i])) {
+			i++;
+		}
+	}
+	if (line[i] == '\0' || line[i] == '#') {
 		return false;
 	}
 	i++;
+	// line[i] = '='
 	while (isspace(line[i])) {
 		i++;
 	}
-	for (int j = 0; !isspace(line[i]) && line[i] != '\0'; i++, j++) {
+	char value[strlen(line) + 1];
+	for (int j = 0; !isspace(line[i]) && line[i] != '\0'; j++, i++) {
 		value[j] = line[i];
 	}
 	if (strlen(value) == 0) {
-		printf("No value found!\n");
 		return false;
 	}
 	while (isspace(line[i])) {
 		i++;
 	}
-	printf("var: %s, val: %s\n", variable, value);
-	return (line[i] == '\0' || line[i] == '\n' || line[i] == '#');
+	return (line[i] == '\0' || line[i] == '#');
 }
 
 void setConfigDefaultValues(SPConfig config) {
-	// setting default values
+// setting default values
 	config->spPCADimension = spPCADimension_DEFAULT;
 	config->spPCAFilename = spPCAFilename_DEFAULT;
 	config->spNumOfFeatures = spNumOfFeatures_DEFAULT;
@@ -527,21 +528,22 @@ bool mapVarAndValToConfig(SPConfig config, char* variable, char* value,
 			return false;
 		}
 	} else {
-		// variable is invalid
+// variable is invalid
 		*msg = SP_CONFIG_INVALID_LINE;
+		printf("variable is invalid!!\n");
+		printf("variable = %s\n", variable);
 		printf(INVALID_LINE_STRING, filename, lineNum);
 		return false;
 	}
 	free(variable);
 	free(value);
-	printf("hello!\n");
 	return true;
 }
 
 bool allVariablesSet(const char* filename, int lineNum, SP_CONFIG_MSG* msg,
 bool spImagesDirectorySet, bool spImagesPrefixSet,
 bool spImagesSuffixSet, bool spNumOfImagesSet) {
-	//Check if variables without default values has been set
+//Check if variables without default values has been set
 	if (!spImagesDirectorySet) {
 		*msg = SP_CONFIG_MISSING_DIR;
 		printf(PARAMETER_NOT_SET_STRING, filename, lineNum,
@@ -582,44 +584,59 @@ void freeBeforeExit(SPConfig config, FILE* file, char* line, char* variable,
 
 char* getVariableName(const char* line) {
 // We assume line is valid
+	// s*cc*s*=s*ccs*\0;
+	// s = whitespace, c = non-whitespace
+	// *=0 or more (regular expressions)
 	int i = 0;
-	for (; isspace(line[i]); i++) {
+	while (isspace(line[i])) {
+		i++;
 	}
-	if (line[i] == '\0' || line[i] == '\n' || line[i] == '#') { // if line contains only spaces and a comment
+	if (line[i] == '\0' || line[i] == '#') { //empty or comments only
 		return NULL;
 	}
-	char* variable = (char*) calloc(MAX_STRING_SIZE, sizeof(char));
+	char* variable = (char*) calloc(MAX_STRING_SIZE + 1, sizeof(char)); //+1 for null char
 	if (!variable) {
 		return "";
 	}
-	for (int j = 0; !isspace(line[i]); i++, j++) { // we reached the variable
+	for (int j = 0; !isspace(line[i]) && line[i] != '='; j++, i++) {
 		variable[j] = line[i];
 	}
 	return variable;
 }
 
 char* getVariableValue(const char* line) {
+	// s*cc*s*=s*ccs*\0;
+	// s = whitespace, c = non-whitespace
+	// *=0 or more (regular expressions)
 	int i = 0;
-	for (; isspace(line[i]); i++) {
+	while (isspace(line[i])) {
+		i++;
 	}
-	if (line[i] == '\0' || line[i] == '\n' || line[i] == '#') { // if line contains only spaces and a comment
+	if (line[i] == '\0' || line[i] == '#') { //empty or comments only
 		return NULL;
 	}
-	char* value = (char*) calloc(MAX_STRING_SIZE, sizeof(char));
+	for (int j = 0; !isspace(line[i]) && line[i] != '='; j++, i++) {
+		// variable
+	}
+	if (line[i] != '=') {
+		while (isspace(line[i])) {
+			i++;
+		}
+	}
+	if (line[i] == '\0' || line[i] == '#') {
+		return false;
+	}
+	i++;
+	// line[i] = '='
+	while (isspace(line[i])) {
+		i++;
+	}
+	char* value = (char*) calloc(MAX_STRING_SIZE + 1, sizeof(char)); //+1 for null char
 	if (!value) {
 		return "";
 	}
-	for (int j = 0; !isspace(line[i]); i++, j++) { // we reached the variable
-	}
-	for (; line[i] != '='; i++) {
-	}
-	for (; isspace(line[i]); i++) {
-	}
-	for (int j = 0; !isspace(line[i]); i++, j++) {
+	for (int j = 0; !isspace(line[i]) && line[i] != '\0'; j++, i++) {
 		value[j] = line[i];
-	}
-	if (strlen(value) == 0) {
-		return NULL;
 	}
 	return value;
 }
@@ -738,4 +755,21 @@ SP_CONFIG_SPLIT_METHOD spKDTreeSplitMethodParser(char* method) {
 bool booleanParser(char* boolean) {
 // we assume boolean is valid
 	return strcmp(boolean, "true") == 0;
+}
+
+void printConfig(SPConfig config) {
+	printf("spImagesDirectory = %s\n",config->spImagesDirectory);
+	printf("spImagesPrefix = %s\n",config->spImagesPrefix);
+	printf("spImagesSuffix = %s\n",config->spImagesSuffix);
+	printf("spNumOfImages = %d\n",config->spNumOfImages);
+	printf("spPCADimension = %d\n",config->spPCADimension);
+	printf("spPCAFilename = %s\n",config->spPCAFilename);
+	printf("spNumOfFeatures = %d\n",config->spNumOfFeatures);
+	printf("spExtractionMode = %d\n",config->spExtractionMode);
+	printf("spNumOfSimilarImages = %d\n",config->spNumOfSimilarImages);
+	printf("spKDTreeSplitMethod = %d\n",config->spKDTreeSplitMethod);
+	printf("spKNN = %d\n",config->spKNN);
+	printf("spMinimalGUI = %d\n",config->spMinimalGUI);
+	printf("spLoggerLevel = %d\n",config->spLoggerLevel);
+	printf("spLoggerFilename = %s\n",config->spLoggerFilename);
 }

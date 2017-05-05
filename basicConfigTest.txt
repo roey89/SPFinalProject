@@ -1,6 +1,6 @@
 #this is a valid configuration file #The following variables don’t have default values and must be set
-spImagesDirectory = ./images/
 spImagesPrefix=img 
+spImagesDirectory = ./images/
 spImagesSuffix = .png 
 spNumOfImages = 17 
 #the following variables have default values, if not set the default value is choosen
@@ -11,3 +11,4 @@ spNumOfFeatures = 150
 #spMinimalGUI = true -> the default value is chosen since this is a comment
  spNumOfSimilarImages = 5 
 spLoggerFilename = loggerfilefortest.txt
+#

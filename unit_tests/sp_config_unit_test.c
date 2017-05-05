@@ -14,7 +14,7 @@
 static bool basicConfigTest() {
 	SP_CONFIG_MSG* msg = (SP_CONFIG_MSG*) malloc(sizeof(SP_CONFIG_MSG));
 	SPConfig config = spConfigCreate("basicConfigTest.txt", msg);
-	return (strcmp(config->spImagesDirectory, "./images/") == 0)
+	bool toRet = (strcmp(config->spImagesDirectory, "./images/") == 0)
 			&& (strcmp(config->spImagesPrefix, "img") == 0)
 			&& (strcmp(config->spImagesSuffix, ".png") == 0)
 			&& (config->spNumOfImages == 17) && (config->spPCADimension == 20)
@@ -26,6 +26,10 @@ static bool basicConfigTest() {
 			&& (config->spKNN == 1) && (config->spMinimalGUI == false)
 			&& (config->spLoggerLevel == 3)
 			&& (strcmp(config->spLoggerFilename, "loggerfilefortest.txt") == 0);
+	printConfig(config);
+	spConfigDestroy(config);
+	free(msg);
+	return toRet;
 }
 
 int main() {

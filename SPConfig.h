@@ -41,12 +41,10 @@ typedef struct sp_config_t {
 	// default values
 	int spPCADimension;
 	char* spPCAFilename;
-	int spNumOfFeatures;
-	bool spExtractionMode;
+	int spNumOfFeatures;bool spExtractionMode;
 	int spNumOfSimilarImages;
 	SP_CONFIG_SPLIT_METHOD spKDTreeSplitMethod;
-	int spKNN;
-	bool spMinimalGUI;
+	int spKNN;bool spMinimalGUI;
 	int spLoggerLevel;
 	char* spLoggerFilename;
 } SPConfigStruct;
@@ -199,5 +197,7 @@ SP_CONFIG_MSG spConfigGetPCAPath(char* pcaPath, const SPConfig config);
  * If config == NULL nothig is done.
  */
 void spConfigDestroy(SPConfig config);
+
+void printConfig(SPConfig config);
 
 #endif /* SPCONFIG_H_ */
