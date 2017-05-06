@@ -37,9 +37,9 @@ typedef struct sp_config_t {
 #define SP_CONFIG_OPEN_MODE "r"
 
 //Error messages
-#define INVALID_LINE_STRING "File: %s\nLine: %d\nMessage: Invalid configuration line"
-#define CONSTRAINT_NOT_MET_STRING "File: %s\nLine: %d\nMessage: Invalid value - constraint not met"
-#define PARAMETER_NOT_SET_STRING "File: %s\nLine: %d\nMessage: Parameter %s is not set"
+#define INVALID_LINE_STRING "File: %s\nLine: %d\nMessage: Invalid configuration line\n"
+#define CONSTRAINT_NOT_MET_STRING "File: %s\nLine: %d\nMessage: Invalid value - constraint not met\n"
+#define PARAMETER_NOT_SET_STRING "File: %s\nLine: %d\nMessage: Parameter %s is not set\n"
 
 #define MAP_CASE_STRING_CONSTRAINT_NOT_MET \
 	*msg = SP_CONFIG_INVALID_STRING; \
@@ -453,7 +453,9 @@ void setConfigInitialValues(SPConfig config) {
 	config->spImagesSuffix = NULL; // Just to check if this has been set to a valid value
 	config->spNumOfImages = 0; // Just to check if this has been set to a valid value
 	config->spPCADimension = spPCADimension_DEFAULT;
-	config->spPCAFilename = spPCAFilename_DEFAULT;
+	config->spPCAFilename = (char *) calloc(strlen(spPCAFilename_DEFAULT) + 1,
+			sizeof(char));
+	strcpy(config->spPCAFilename, spPCAFilename_DEFAULT);
 	config->spNumOfFeatures = spNumOfFeatures_DEFAULT;
 	config->spExtractionMode = spExtractionMode_DEFAULT;
 	config->spNumOfSimilarImages = spNumOfSimilarImages_DEFAULT;
@@ -461,7 +463,9 @@ void setConfigInitialValues(SPConfig config) {
 	config->spKNN = spKNN_DEFAULT;
 	config->spMinimalGUI = spMinimalGUI_DEFAULT;
 	config->spLoggerLevel = spLoggerLevel_DEFAULT;
-	config->spLoggerFilename = spLoggerFilename_DEFAULT;
+	config->spLoggerFilename = (char *) calloc(
+			strlen(spLoggerFilename_DEFAULT) + 1, sizeof(char));
+	strcpy(config->spLoggerFilename, spLoggerFilename_DEFAULT);
 }
 
 /**
@@ -575,7 +579,7 @@ bool mapVarAndValToConfig(SPConfig config, char* variable, char* value,
 		}
 	} else if (strcmp(variable, "spKDTreeSplitMethod") == 0) {
 		if (spKDTreeSplitMethodConstraint(value)) {
-			config->spMinimalGUI = spKDTreeSplitMethodParser(value);
+			config->spKDTreeSplitMethod = spKDTreeSplitMethodParser(value);
 		} else {
 			MAP_CASE_SPLIT_METHOD_CONSTRAINT_NOT_MET
 		}

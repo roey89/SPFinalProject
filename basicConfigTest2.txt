@@ -1,0 +1,21 @@
+ spImagesSuffix = .jpg 
+ spPCADimension=    25 #->
+ 	spImagesDirectory	 = 		C:/	
+spImagesPrefix=   picture 
+spNumOfFeatures = 134
+
+ spNumOfSimilarImages = 6 
+spMinimalGUI = true
+
+spNumOfImages = 26 
+
+ spPCAFilename=ppasnapa.txt 	 
+     	spPCADimension	 	=28 #
+spNumOfFeatures = 161
+  spKDTreeSplitMethod   = INCREMENTAL			    
+ spExtractionMode = false 
+spKNN = 51
+ spNumOfSimilarImages = 2 
+		       #spLoggerFilename = loggerfilefortest.txt
+
+spLoggerLevel = 1
