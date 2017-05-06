@@ -74,7 +74,6 @@ typedef struct sp_config_t {
 #define spLoggerFilename_DEFAULT "stdout"
 
 //General auxiliary functions
-bool isValidConfigLine(char* line);
 void setConfigInitialValues(SPConfig config);
 bool mapVarAndValToConfig(SPConfig config, char* variable, char* value,
 		const char* filename, int lineNum, SP_CONFIG_MSG* msg);
@@ -82,8 +81,13 @@ bool allVariablesSet(SPConfig config, const char* filename, int lineNum,
 		SP_CONFIG_MSG* msg);
 void freeBeforeExit(SPConfig config, FILE* file, char* line, char* variable,
 		char* value);
+bool isValidBoolean(const char* string);
+bool positiveNum(int num);
+bool isInt(char* numString);
+bool noSpacesString(char* str);
 
 //Line parsers
+bool isValidConfigLine(char* line);
 char* getVariableName(const char* line);
 char* getVariableValue(const char* line);
 
@@ -92,10 +96,6 @@ SP_CONFIG_SPLIT_METHOD spKDTreeSplitMethodParser(char* method);
 bool booleanParser(char* boolean);
 
 //Constraints
-bool isValidBoolean(const char* string);
-bool positiveNum(int num);
-bool isInt(char* numString);
-bool noSpacesString(char* str);
 bool spImagesDirectoryConstraint(char* directory);
 bool spImagesPrefixConstraint(char* prefix);
 bool spImagesSuffixConstraint(char* suffix);

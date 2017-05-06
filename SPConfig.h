@@ -175,21 +175,29 @@ SP_CONFIG_MSG spConfigGetImagePath(char* imagePath, const SPConfig config,
  */
 SP_CONFIG_MSG spConfigGetPCAPath(char* pcaPath, const SPConfig config);
 
-bool spConfigExpected(SPConfig config, char* spImagesDirectory, char* spImagesPrefix,
-		char* spImagesSuffix, int spNumOfImages, int spPCADimension,
-		char* spPCAFilename, int spNumOfFeatures,
-		bool spExtractionMode, int spNumOfSimilarImages,
-		SP_CONFIG_SPLIT_METHOD spKDTreeSplitMethod, int spKNN,
-		bool spMinimalGUI, int spLoggerLevel, char* spLoggerFilename);
 /**
- * Frees all memory resources associate with config. 
+ * The function frees all memory resources associate with config.
  * If config == NULL nothig is done.
  */
 void spConfigDestroy(SPConfig config);
 
 /**
- * Prints all the fields of the config (with their values).
+ * The function prints all the fields of the config (with their values).
  */
 void printConfig(SPConfig config);
+
+/**
+ * The function compares the fields of the config with the given variable (each field with its corresponding variable).
+ * If there is a mismatch, the program will print the expected value and the actual value
+ *
+ *
+ * @return true if all fields are equal, false otherwise
+ */
+bool spConfigExpected(SPConfig config, char* spImagesDirectory,
+		char* spImagesPrefix, char* spImagesSuffix, int spNumOfImages,
+		int spPCADimension, char* spPCAFilename, int spNumOfFeatures,
+		bool spExtractionMode, int spNumOfSimilarImages,
+		SP_CONFIG_SPLIT_METHOD spKDTreeSplitMethod, int spKNN,
+		bool spMinimalGUI, int spLoggerLevel, char* spLoggerFilename);
 
 #endif /* SPCONFIG_H_ */

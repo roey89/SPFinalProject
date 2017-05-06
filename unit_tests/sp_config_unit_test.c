@@ -16,7 +16,7 @@
 static bool basicConfigTest() {
 	SP_CONFIG_MSG* msg = (SP_CONFIG_MSG*) malloc(sizeof(SP_CONFIG_MSG));
 	SPConfig config = spConfigCreate("basicConfigTest.txt", msg);
-	ASSERT_TRUE(*msg == SP_CONFIG_INVALID_INTEGER); //
+	ASSERT_TRUE(*msg == SP_CONFIG_INVALID_INTEGER);
 	free(msg);
 	ASSERT_TRUE(
 			spConfigExpected(config, "./images/", "img", ".png", 17, 6, "pca.yml", 134, true, 3, 1, 1, false, 5, "loggerfilefortest.txt"));
