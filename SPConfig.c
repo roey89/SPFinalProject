@@ -45,12 +45,9 @@
 bool isValidConfigLine(char* line);
 void setConfigDefaultValues(SPConfig config);
 bool mapVarAndValToConfig(SPConfig config, char* variable, char* value,
-		const char* filename, int lineNum, SP_CONFIG_MSG* msg,
-		bool* spImagesDirectorySet, bool* spImagesPrefixSet,
-		bool* spImagesSuffixSet, bool* spNumOfImagesSet);
-bool allVariablesSet(const char* filename, int lineNum, SP_CONFIG_MSG* msg,
-bool spImagesDirectorySet, bool spImagesPrefixSet,
-bool spImagesSuffixSet, bool spNumOfImagesSet);
+		const char* filename, int lineNum, SP_CONFIG_MSG* msg);
+bool allVariablesSet(SPConfig config, const char* filename, int lineNum,
+		SP_CONFIG_MSG* msg);
 void freeBeforeExit(SPConfig config, FILE* file, char* line, char* variable,
 		char* value);
 
@@ -112,8 +109,6 @@ SPConfig spConfigCreate(const char* filename, SP_CONFIG_MSG* msg) {
 
 	// going over the file
 	int charNum, lineNum = 0;
-	bool spImagesDirectorySet = false, spImagesPrefixSet = false,
-			spImagesSuffixSet = false, spNumOfImagesSet = false;
 	char currChar, *line = (char*) calloc(MAX_STRING_SIZE + 1, sizeof(char)); //+1 for null char
 	if (!line) { //If allocation failed
 		fclose(fp);
@@ -130,10 +125,9 @@ SPConfig spConfigCreate(const char* filename, SP_CONFIG_MSG* msg) {
 		lineNum++;
 		do {
 			currChar = fgetc(fp);
-				line[charNum++] = currChar;
+			line[charNum++] = currChar;
 		} while (currChar != '\n' && !feof(fp));
-		line[charNum--] = '\0'; // remove last character (newline or eof)
-		printf("\nLine: ~%s~\n\n", line);
+		line[--charNum] = '\0'; // remove last character (newline or eof)
 		if (!isValidConfigLine(line)) {
 			fclose(fp);
 			free(line);
@@ -172,20 +166,17 @@ SPConfig spConfigCreate(const char* filename, SP_CONFIG_MSG* msg) {
 		}
 
 		if (!mapVarAndValToConfig(config, variable, value, filename, lineNum,
-				msg, &spImagesDirectorySet, &spImagesPrefixSet,
-				&spImagesSuffixSet, &spNumOfImagesSet)) {
+				msg)) {
 			freeBeforeExit(config, fp, line, variable, value);
 			return NULL;
 		}
-
 	}
 
 	fclose(fp);
 	free(line);
 
 	//Check if variables without default values have been set
-	if (!allVariablesSet(filename, lineNum, msg, spImagesDirectorySet,
-			spImagesPrefixSet, spImagesSuffixSet, spNumOfImagesSet)) {
+	if (!allVariablesSet(config, filename, lineNum, msg)) {
 		spConfigDestroy(config);
 		spLoggerDestroy();
 		return NULL;
@@ -332,6 +323,10 @@ bool isValidConfigLine(char* line) {
 
 void setConfigDefaultValues(SPConfig config) {
 // setting default values
+	config->spImagesDirectory = NULL;
+	config->spImagesPrefix = NULL;
+	config->spImagesSuffix = NULL;
+	config->spNumOfImages = 0;
 	config->spPCADimension = spPCADimension_DEFAULT;
 	config->spPCAFilename = spPCAFilename_DEFAULT;
 	config->spNumOfFeatures = spNumOfFeatures_DEFAULT;
@@ -370,16 +365,13 @@ void setConfigDefaultValues(SPConfig config) {
  * - nothing - in case of success (will be set in spConfigCreate)
  */
 bool mapVarAndValToConfig(SPConfig config, char* variable, char* value,
-		const char* filename, int lineNum, SP_CONFIG_MSG* msg,
-		bool* spImagesDirectorySet, bool* spImagesPrefixSet,
-		bool* spImagesSuffixSet, bool* spNumOfImagesSet) {
+		const char* filename, int lineNum, SP_CONFIG_MSG* msg) {
 	if (strcmp(variable, "spImagesDirectory") == 0) {
 		if (spImagesDirectoryConstraint(value)) {
 			free(config->spImagesDirectory);
-			config->spImagesDirectory = (char*) calloc(strlen(value),
+			config->spImagesDirectory = (char*) calloc(strlen(value) + 1,
 					sizeof(char));
 			strcpy(config->spImagesDirectory, value);
-			*spImagesDirectorySet = true;
 		} else {
 			*msg = SP_CONFIG_INVALID_STRING;
 			printf(CONSTRAINT_NOT_MET_STRING, filename, lineNum);
@@ -388,10 +380,9 @@ bool mapVarAndValToConfig(SPConfig config, char* variable, char* value,
 	} else if (strcmp(variable, "spImagesPrefix") == 0) {
 		if (spImagesPrefixConstraint(value)) {
 			free(config->spImagesPrefix);
-			config->spImagesPrefix = (char*) calloc(strlen(value),
+			config->spImagesPrefix = (char*) calloc(strlen(value) + 1,
 					sizeof(char));
 			strcpy(config->spImagesPrefix, value);
-			*spImagesPrefixSet = true;
 		} else {
 			*msg = SP_CONFIG_INVALID_STRING;
 			printf(CONSTRAINT_NOT_MET_STRING, filename, lineNum);
@@ -400,10 +391,9 @@ bool mapVarAndValToConfig(SPConfig config, char* variable, char* value,
 	} else if (strcmp(variable, "spImagesSuffix") == 0) {
 		if (spImagesSuffixConstraint(value)) {
 			free(config->spImagesSuffix);
-			config->spImagesSuffix = (char*) calloc(strlen(value),
+			config->spImagesSuffix = (char*) calloc(strlen(value) + 1,
 					sizeof(char));
 			strcpy(config->spImagesSuffix, value);
-			*spImagesSuffixSet = true;
 		} else {
 			*msg = SP_CONFIG_INVALID_STRING;
 			printf(CONSTRAINT_NOT_MET_STRING, filename, lineNum);
@@ -416,7 +406,6 @@ bool mapVarAndValToConfig(SPConfig config, char* variable, char* value,
 			return false;
 		} else if (spNumOfImagesConstraint(atoi(value))) {
 			config->spNumOfImages = atoi(value);
-			*spNumOfImagesSet = true;
 		} else {
 			*msg = SP_CONFIG_INVALID_INTEGER;
 			printf(CONSTRAINT_NOT_MET_STRING, filename, lineNum);
@@ -437,7 +426,8 @@ bool mapVarAndValToConfig(SPConfig config, char* variable, char* value,
 	} else if (strcmp(variable, "spPCAFilename") == 0) {
 		if (spPCAFilenameConstraint(value)) {
 			free(config->spPCAFilename);
-			config->spPCAFilename = (char*) calloc(strlen(value), sizeof(char));
+			config->spPCAFilename = (char*) calloc(strlen(value) + 1,
+					sizeof(char));
 			strcpy(config->spPCAFilename, value);
 		} else {
 			*msg = SP_CONFIG_INVALID_STRING;
@@ -519,7 +509,7 @@ bool mapVarAndValToConfig(SPConfig config, char* variable, char* value,
 	} else if (strcmp(variable, "spLoggerFilename") == 0) {
 		if (spPCAFilenameConstraint(value)) {
 			free(config->spLoggerFilename);
-			config->spLoggerFilename = (char*) calloc(strlen(value),
+			config->spLoggerFilename = (char*) calloc(strlen(value) + 1,
 					sizeof(char));
 			strcpy(config->spLoggerFilename, value);
 		} else {
@@ -530,8 +520,6 @@ bool mapVarAndValToConfig(SPConfig config, char* variable, char* value,
 	} else {
 // variable is invalid
 		*msg = SP_CONFIG_INVALID_LINE;
-		printf("variable is invalid!!\n");
-		printf("variable = %s\n", variable);
 		printf(INVALID_LINE_STRING, filename, lineNum);
 		return false;
 	}
@@ -540,27 +528,26 @@ bool mapVarAndValToConfig(SPConfig config, char* variable, char* value,
 	return true;
 }
 
-bool allVariablesSet(const char* filename, int lineNum, SP_CONFIG_MSG* msg,
-bool spImagesDirectorySet, bool spImagesPrefixSet,
-bool spImagesSuffixSet, bool spNumOfImagesSet) {
+bool allVariablesSet(SPConfig config, const char* filename, int lineNum,
+		SP_CONFIG_MSG* msg) {
 //Check if variables without default values has been set
-	if (!spImagesDirectorySet) {
+	if (!config->spImagesDirectory) {
 		*msg = SP_CONFIG_MISSING_DIR;
 		printf(PARAMETER_NOT_SET_STRING, filename, lineNum,
 				"spImagesDirectory");
 		return false;
 	}
-	if (!spImagesPrefixSet) {
+	if (!config->spImagesPrefix) {
 		*msg = SP_CONFIG_MISSING_PREFIX;
 		printf(PARAMETER_NOT_SET_STRING, filename, lineNum, "spImagesPrefix");
 		return false;
 	}
-	if (!spImagesSuffixSet) {
+	if (!config->spImagesSuffix) {
 		*msg = SP_CONFIG_MISSING_SUFFIX;
 		printf(PARAMETER_NOT_SET_STRING, filename, lineNum, "spImagesSuffix");
 		return false;
 	}
-	if (!spNumOfImagesSet) {
+	if (config->spNumOfImages == 0) {
 		*msg = SP_CONFIG_MISSING_NUM_IMAGES;
 		printf(PARAMETER_NOT_SET_STRING, filename, lineNum, "spNumOfImages");
 		return false;
@@ -758,18 +745,18 @@ bool booleanParser(char* boolean) {
 }
 
 void printConfig(SPConfig config) {
-	printf("spImagesDirectory = %s\n",config->spImagesDirectory);
-	printf("spImagesPrefix = %s\n",config->spImagesPrefix);
-	printf("spImagesSuffix = %s\n",config->spImagesSuffix);
-	printf("spNumOfImages = %d\n",config->spNumOfImages);
-	printf("spPCADimension = %d\n",config->spPCADimension);
-	printf("spPCAFilename = %s\n",config->spPCAFilename);
-	printf("spNumOfFeatures = %d\n",config->spNumOfFeatures);
-	printf("spExtractionMode = %d\n",config->spExtractionMode);
-	printf("spNumOfSimilarImages = %d\n",config->spNumOfSimilarImages);
-	printf("spKDTreeSplitMethod = %d\n",config->spKDTreeSplitMethod);
-	printf("spKNN = %d\n",config->spKNN);
-	printf("spMinimalGUI = %d\n",config->spMinimalGUI);
-	printf("spLoggerLevel = %d\n",config->spLoggerLevel);
-	printf("spLoggerFilename = %s\n",config->spLoggerFilename);
+	printf("\nspImagesDirectory = %s\n", config->spImagesDirectory);
+	printf("spImagesPrefix = %s\n", config->spImagesPrefix);
+	printf("spImagesSuffix = %s\n", config->spImagesSuffix);
+	printf("spNumOfImages = %d\n", config->spNumOfImages);
+	printf("spPCADimension = %d\n", config->spPCADimension);
+	printf("spPCAFilename = %s\n", config->spPCAFilename);
+	printf("spNumOfFeatures = %d\n", config->spNumOfFeatures);
+	printf("spExtractionMode = %d\n", config->spExtractionMode);
+	printf("spNumOfSimilarImages = %d\n", config->spNumOfSimilarImages);
+	printf("spKDTreeSplitMethod = %d\n", config->spKDTreeSplitMethod);
+	printf("spKNN = %d\n", config->spKNN);
+	printf("spMinimalGUI = %d\n", config->spMinimalGUI);
+	printf("spLoggerLevel = %d\n", config->spLoggerLevel);
+	printf("spLoggerFilename = %s\n\n", config->spLoggerFilename);
 }
