@@ -32,23 +32,6 @@ typedef enum sp_config_split_method_t {
 
 typedef struct sp_config_t* SPConfig;
 
-typedef struct sp_config_t {
-	// no default values
-	char* spImagesDirectory;
-	char* spImagesPrefix;
-	char* spImagesSuffix;
-	int spNumOfImages;
-	// default values
-	int spPCADimension;
-	char* spPCAFilename;
-	int spNumOfFeatures;bool spExtractionMode;
-	int spNumOfSimilarImages;
-	SP_CONFIG_SPLIT_METHOD spKDTreeSplitMethod;
-	int spKNN;bool spMinimalGUI;
-	int spLoggerLevel;
-	char* spLoggerFilename;
-} SPConfigStruct;
-
 /**
  * Creates a new system configuration struct. The configuration struct
  * is initialized based on the configuration file given by 'filename'.
@@ -192,12 +175,21 @@ SP_CONFIG_MSG spConfigGetImagePath(char* imagePath, const SPConfig config,
  */
 SP_CONFIG_MSG spConfigGetPCAPath(char* pcaPath, const SPConfig config);
 
+bool spConfigExpected(SPConfig config, char* spImagesDirectory, char* spImagesPrefix,
+		char* spImagesSuffix, int spNumOfImages, int spPCADimension,
+		char* spPCAFilename, int spNumOfFeatures,
+		bool spExtractionMode, int spNumOfSimilarImages,
+		SP_CONFIG_SPLIT_METHOD spKDTreeSplitMethod, int spKNN,
+		bool spMinimalGUI, int spLoggerLevel, char* spLoggerFilename);
 /**
  * Frees all memory resources associate with config. 
  * If config == NULL nothig is done.
  */
 void spConfigDestroy(SPConfig config);
 
+/**
+ * Prints all the fields of the config (with their values).
+ */
 void printConfig(SPConfig config);
 
 #endif /* SPCONFIG_H_ */

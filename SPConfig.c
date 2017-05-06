@@ -12,6 +12,25 @@
 #include <ctype.h>
 #include <string.h>
 
+typedef struct sp_config_t {
+	// no default values
+	char* spImagesDirectory;
+	char* spImagesPrefix;
+	char* spImagesSuffix;
+	int spNumOfImages;
+	// default values
+	int spPCADimension;
+	char* spPCAFilename;
+	int spNumOfFeatures;
+	bool spExtractionMode;
+	int spNumOfSimilarImages;
+	SP_CONFIG_SPLIT_METHOD spKDTreeSplitMethod;
+	int spKNN;
+	bool spMinimalGUI;
+	int spLoggerLevel;
+	char* spLoggerFilename;
+} SPConfigStruct;
+
 #define MAX_STRING_SIZE 1024
 
 //File open mode
@@ -22,12 +41,25 @@
 #define CONSTRAINT_NOT_MET_STRING "File: %s\nLine: %d\nMessage: Invalid value - constraint not met"
 #define PARAMETER_NOT_SET_STRING "File: %s\nLine: %d\nMessage: Parameter %s is not set"
 
-/* #define MAP_CASE_STRING_CONSTRAINT_NOT_MET \
-	do { \
-		*msg = SP_CONFIG_INVALID_STRING; \
-		printf(CONSTRAINT_NOT_MET_STRING, filename, lineNum); \
-		return false; \
-	} while (0); */
+#define MAP_CASE_STRING_CONSTRAINT_NOT_MET \
+	*msg = SP_CONFIG_INVALID_STRING; \
+	printf(CONSTRAINT_NOT_MET_STRING, filename, lineNum); \
+	return false;
+
+#define MAP_CASE_INTEGER_CONSTRAINT_NOT_MET \
+	*msg = SP_CONFIG_INVALID_INTEGER; \
+	printf(CONSTRAINT_NOT_MET_STRING, filename, lineNum); \
+	return false;
+
+#define MAP_CASE_BOOLEAN_CONSTRAINT_NOT_MET \
+	*msg = SP_CONFIG_INVALID_BOOLEAN;\
+	printf(CONSTRAINT_NOT_MET_STRING, filename, lineNum);\
+	return false;
+
+#define MAP_CASE_SPLIT_METHOD_CONSTRAINT_NOT_MET \
+	*msg = SP_CONFIG_INVALID_SPLIT_METHOD;\
+	printf(CONSTRAINT_NOT_MET_STRING, filename, lineNum);\
+	return false;
 
 //Default values
 #define spPCADimension_DEFAULT 20
@@ -43,7 +75,7 @@
 
 //General auxiliary functions
 bool isValidConfigLine(char* line);
-void setConfigDefaultValues(SPConfig config);
+void setConfigInitialValues(SPConfig config);
 bool mapVarAndValToConfig(SPConfig config, char* variable, char* value,
 		const char* filename, int lineNum, SP_CONFIG_MSG* msg);
 bool allVariablesSet(SPConfig config, const char* filename, int lineNum,
@@ -105,7 +137,7 @@ SPConfig spConfigCreate(const char* filename, SP_CONFIG_MSG* msg) {
 	}
 
 	//setting default values
-	setConfigDefaultValues(config);
+	setConfigInitialValues(config);
 
 	// going over the file
 	int charNum, lineNum = 0;
@@ -270,14 +302,107 @@ void spConfigDestroy(SPConfig config) {
 	free(config);
 }
 
+bool spConfigExpected(SPConfig config, char* spImagesDirectory,
+		char* spImagesPrefix, char* spImagesSuffix, int spNumOfImages,
+		int spPCADimension, char* spPCAFilename, int spNumOfFeatures,
+		bool spExtractionMode, int spNumOfSimilarImages,
+		SP_CONFIG_SPLIT_METHOD spKDTreeSplitMethod, int spKNN,
+		bool spMinimalGUI, int spLoggerLevel, char* spLoggerFilename) {
+	bool toReturn = true;
+	if (strcmp(config->spImagesDirectory, spImagesDirectory) != 0) {
+		toReturn = false;
+		printf(
+				"COMPARISON FAILED at variable spImagesDirectory. value: %s, expected: %s\n",
+				config->spImagesDirectory, spImagesDirectory);
+	}
+	if (strcmp(config->spImagesPrefix, spImagesPrefix) != 0) {
+		toReturn = false;
+		printf(
+				"COMPARISON FAILED at variable spImagesPrefix. value: %s, expected: %s\n",
+				config->spImagesPrefix, spImagesPrefix);
+	}
+	if (strcmp(config->spImagesSuffix, spImagesSuffix) != 0) {
+		toReturn = false;
+		printf(
+				"COMPARISON FAILED at variable spImagesSuffix. value: %s, expected: %s\n",
+				config->spImagesSuffix, spImagesSuffix);
+	}
+	if (config->spNumOfImages != spNumOfImages) {
+		toReturn = false;
+		printf(
+				"COMPARISON FAILED at variable spNumOfImages. value: %d, expected: %d\n",
+				config->spNumOfImages, spNumOfImages);
+	}
+	if (config->spPCADimension != spPCADimension) {
+		toReturn = false;
+		printf(
+				"COMPARISON FAILED at variable spPCADimension. value: %d, expected: %d\n",
+				config->spPCADimension, spPCADimension);
+	}
+	if (strcmp(config->spPCAFilename, spPCAFilename) != 0) {
+		toReturn = false;
+		printf(
+				"COMPARISON FAILED at variable spPCAFilename. value: %s, expected: %s\n",
+				config->spPCAFilename, spPCAFilename);
+	}
+	if (config->spNumOfFeatures != spNumOfFeatures) {
+		toReturn = false;
+		printf(
+				"COMPARISON FAILED at variable spNumOfFeatures. value: %d, expected: %d\n",
+				config->spNumOfFeatures, spNumOfFeatures);
+	}
+	if (config->spExtractionMode != spExtractionMode) {
+		toReturn = false;
+		printf(
+				"COMPARISON FAILED at variable spExtractionMode. value: %d, expected: %d\n",
+				config->spExtractionMode, spExtractionMode);
+	}
+	if (config->spNumOfSimilarImages != spNumOfSimilarImages) {
+		toReturn = false;
+		printf(
+				"COMPARISON FAILED at variable spNumOfSimilarImages. value: %d, expected: %d\n",
+				config->spNumOfSimilarImages, spNumOfSimilarImages);
+	}
+	if (config->spKDTreeSplitMethod != spKDTreeSplitMethod) {
+		toReturn = false;
+		printf(
+				"COMPARISON FAILED at variable spKDTreeSplitMethod. value: %d, expected: %d\n",
+				config->spKDTreeSplitMethod, spKDTreeSplitMethod);
+	}
+	if (config->spKNN != spKNN) {
+		toReturn = false;
+		printf("COMPARISON FAILED at variable spKNN. value: %d, expected: %d\n",
+				config->spKNN, spKNN);
+	}
+	if (config->spMinimalGUI != spMinimalGUI) {
+		toReturn = false;
+		printf(
+				"COMPARISON FAILED at variable spMinimalGUI. value: %d, expected: %d\n",
+				config->spMinimalGUI, spMinimalGUI);
+	}
+	if (config->spLoggerLevel != spLoggerLevel) {
+		toReturn = false;
+		printf(
+				"COMPARISON FAILED at variable spLoggerLevel. value: %d, expected: %d\n",
+				config->spLoggerLevel, spLoggerLevel);
+	}
+	if (strcmp(config->spLoggerFilename, spLoggerFilename) != 0) {
+		toReturn = false;
+		printf(
+				"COMPARISON FAILED at variable spLoggerFilename. value: %s, expected: %s\n",
+				config->spLoggerFilename, spLoggerFilename);
+	}
+	return toReturn;
+}
+
 /////////////////////////////////
 // General auxiliary functions //
 /////////////////////////////////
 
 bool isValidConfigLine(char* line) {
-	// s*cc*s*=s*ccs*\0;
-	// s = whitespace, c = non-whitespace
-	// *=0 or more (regular expressions)
+// s*cc*s*=s*ccs*\0;
+// s = whitespace, c = non-whitespace
+// *=0 or more (regular expressions)
 	int i = 0;
 	while (isspace(line[i])) {
 		i++;
@@ -304,7 +429,7 @@ bool isValidConfigLine(char* line) {
 		return false;
 	}
 	i++;
-	// line[i] = '='
+// line[i] = '='
 	while (isspace(line[i])) {
 		i++;
 	}
@@ -321,12 +446,12 @@ bool isValidConfigLine(char* line) {
 	return (line[i] == '\0' || line[i] == '#');
 }
 
-void setConfigDefaultValues(SPConfig config) {
+void setConfigInitialValues(SPConfig config) {
 // setting default values
-	config->spImagesDirectory = NULL;
-	config->spImagesPrefix = NULL;
-	config->spImagesSuffix = NULL;
-	config->spNumOfImages = 0;
+	config->spImagesDirectory = NULL; // Just to check if this has been set to a valid value
+	config->spImagesPrefix = NULL; // Just to check if this has been set to a valid value
+	config->spImagesSuffix = NULL; // Just to check if this has been set to a valid value
+	config->spNumOfImages = 0; // Just to check if this has been set to a valid value
 	config->spPCADimension = spPCADimension_DEFAULT;
 	config->spPCAFilename = spPCAFilename_DEFAULT;
 	config->spNumOfFeatures = spNumOfFeatures_DEFAULT;
@@ -361,8 +486,8 @@ void setConfigDefaultValues(SPConfig config) {
  * - SP_CONFIG_INVALID_STRING - if a line in the config file contains invalid string
  * - SP_CONFIG_INVALID_BOOLEAN - if a line in the config file contains invalid boolean
  * - SP_CONFIG_INVALID_SP_CONFIG_INVALID_SPLIT_METHOD - if a line in the config file contains invalid split method
- * - SP_CONFIG_INVALID_VARIABLE_NAME - if a line in the config file has a variable that doesn't exist
- * - nothing - in case of success (will be set in spConfigCreate)
+ * - SP_CONFIG_INVALID_LINE - if a line in the config file has a variable that doesn't exist
+ * - no change - in case of success (will be set in spConfigCreate)
  */
 bool mapVarAndValToConfig(SPConfig config, char* variable, char* value,
 		const char* filename, int lineNum, SP_CONFIG_MSG* msg) {
@@ -373,9 +498,7 @@ bool mapVarAndValToConfig(SPConfig config, char* variable, char* value,
 					sizeof(char));
 			strcpy(config->spImagesDirectory, value);
 		} else {
-			*msg = SP_CONFIG_INVALID_STRING;
-			printf(CONSTRAINT_NOT_MET_STRING, filename, lineNum);
-			return false;
+			MAP_CASE_STRING_CONSTRAINT_NOT_MET
 		}
 	} else if (strcmp(variable, "spImagesPrefix") == 0) {
 		if (spImagesPrefixConstraint(value)) {
@@ -384,9 +507,7 @@ bool mapVarAndValToConfig(SPConfig config, char* variable, char* value,
 					sizeof(char));
 			strcpy(config->spImagesPrefix, value);
 		} else {
-			*msg = SP_CONFIG_INVALID_STRING;
-			printf(CONSTRAINT_NOT_MET_STRING, filename, lineNum);
-			return false;
+			MAP_CASE_STRING_CONSTRAINT_NOT_MET
 		}
 	} else if (strcmp(variable, "spImagesSuffix") == 0) {
 		if (spImagesSuffixConstraint(value)) {
@@ -395,9 +516,7 @@ bool mapVarAndValToConfig(SPConfig config, char* variable, char* value,
 					sizeof(char));
 			strcpy(config->spImagesSuffix, value);
 		} else {
-			*msg = SP_CONFIG_INVALID_STRING;
-			printf(CONSTRAINT_NOT_MET_STRING, filename, lineNum);
-			return false;
+			MAP_CASE_STRING_CONSTRAINT_NOT_MET
 		}
 	} else if (strcmp(variable, "spNumOfImages") == 0) {
 		if (!isInt(value)) {
@@ -407,9 +526,7 @@ bool mapVarAndValToConfig(SPConfig config, char* variable, char* value,
 		} else if (spNumOfImagesConstraint(atoi(value))) {
 			config->spNumOfImages = atoi(value);
 		} else {
-			*msg = SP_CONFIG_INVALID_INTEGER;
-			printf(CONSTRAINT_NOT_MET_STRING, filename, lineNum);
-			return false;
+			MAP_CASE_INTEGER_CONSTRAINT_NOT_MET
 		}
 	} else if (strcmp(variable, "spPCADimension") == 0) {
 		if (!isInt(value)) {
@@ -419,9 +536,7 @@ bool mapVarAndValToConfig(SPConfig config, char* variable, char* value,
 		} else if (spPCADimensionConstraint(atoi(value))) {
 			config->spPCADimension = atoi(value);
 		} else {
-			*msg = SP_CONFIG_INVALID_INTEGER;
-			printf(CONSTRAINT_NOT_MET_STRING, filename, lineNum);
-			return false;
+			MAP_CASE_INTEGER_CONSTRAINT_NOT_MET
 		}
 	} else if (strcmp(variable, "spPCAFilename") == 0) {
 		if (spPCAFilenameConstraint(value)) {
@@ -430,9 +545,7 @@ bool mapVarAndValToConfig(SPConfig config, char* variable, char* value,
 					sizeof(char));
 			strcpy(config->spPCAFilename, value);
 		} else {
-			*msg = SP_CONFIG_INVALID_STRING;
-			printf(CONSTRAINT_NOT_MET_STRING, filename, lineNum);
-			return false;
+			MAP_CASE_STRING_CONSTRAINT_NOT_MET
 		}
 	} else if (strcmp(variable, "spNumOfFeatures") == 0) {
 		if (!isInt(value)) {
@@ -442,17 +555,13 @@ bool mapVarAndValToConfig(SPConfig config, char* variable, char* value,
 		} else if (spNumOfFeaturesConstraint(atoi(value))) {
 			config->spNumOfFeatures = atoi(value);
 		} else {
-			*msg = SP_CONFIG_INVALID_INTEGER;
-			printf(CONSTRAINT_NOT_MET_STRING, filename, lineNum);
-			return false;
+			MAP_CASE_INTEGER_CONSTRAINT_NOT_MET
 		}
 	} else if (strcmp(variable, "spExtractionMode") == 0) {
 		if (spExtractionModeConstraint(value)) {
 			config->spExtractionMode = booleanParser(value);
 		} else {
-			*msg = SP_CONFIG_INVALID_BOOLEAN;
-			printf(CONSTRAINT_NOT_MET_STRING, filename, lineNum);
-			return false;
+			MAP_CASE_BOOLEAN_CONSTRAINT_NOT_MET
 		}
 	} else if (strcmp(variable, "spNumOfSimilarImages") == 0) {
 		if (!isInt(value)) {
@@ -462,17 +571,13 @@ bool mapVarAndValToConfig(SPConfig config, char* variable, char* value,
 		} else if (spNumOfSimilarImagesConstraint(atoi(value))) {
 			config->spNumOfSimilarImages = atoi(value);
 		} else {
-			*msg = SP_CONFIG_INVALID_INTEGER;
-			printf(CONSTRAINT_NOT_MET_STRING, filename, lineNum);
-			return false;
+			MAP_CASE_INTEGER_CONSTRAINT_NOT_MET
 		}
 	} else if (strcmp(variable, "spKDTreeSplitMethod") == 0) {
 		if (spKDTreeSplitMethodConstraint(value)) {
 			config->spMinimalGUI = spKDTreeSplitMethodParser(value);
 		} else {
-			*msg = SP_CONFIG_INVALID_SPLIT_METHOD;
-			printf(CONSTRAINT_NOT_MET_STRING, filename, lineNum);
-			return false;
+			MAP_CASE_SPLIT_METHOD_CONSTRAINT_NOT_MET
 		}
 	} else if (strcmp(variable, "spKNN") == 0) {
 		if (!isInt(value)) {
@@ -482,17 +587,13 @@ bool mapVarAndValToConfig(SPConfig config, char* variable, char* value,
 		} else if (spKNNConstraint(atoi(value))) {
 			config->spKNN = atoi(value);
 		} else {
-			*msg = SP_CONFIG_INVALID_INTEGER;
-			printf(CONSTRAINT_NOT_MET_STRING, filename, lineNum);
-			return false;
+			MAP_CASE_INTEGER_CONSTRAINT_NOT_MET
 		}
 	} else if (strcmp(variable, "spMinimalGUI") == 0) {
 		if (spMinimalGUIConstraint(value)) {
 			config->spMinimalGUI = booleanParser(value);
 		} else {
-			*msg = SP_CONFIG_INVALID_BOOLEAN;
-			printf(CONSTRAINT_NOT_MET_STRING, filename, lineNum);
-			return false;
+			MAP_CASE_BOOLEAN_CONSTRAINT_NOT_MET
 		}
 	} else if (strcmp(variable, "spLoggerLevel") == 0) {
 		if (!isInt(value)) {
@@ -502,9 +603,7 @@ bool mapVarAndValToConfig(SPConfig config, char* variable, char* value,
 		} else if (spLoggerLevelConstraint(atoi(value))) {
 			config->spLoggerLevel = atoi(value);
 		} else {
-			*msg = SP_CONFIG_INVALID_INTEGER;
-			printf(CONSTRAINT_NOT_MET_STRING, filename, lineNum);
-			return false;
+			MAP_CASE_INTEGER_CONSTRAINT_NOT_MET
 		}
 	} else if (strcmp(variable, "spLoggerFilename") == 0) {
 		if (spPCAFilenameConstraint(value)) {
@@ -513,12 +612,10 @@ bool mapVarAndValToConfig(SPConfig config, char* variable, char* value,
 					sizeof(char));
 			strcpy(config->spLoggerFilename, value);
 		} else {
-			*msg = SP_CONFIG_INVALID_STRING;
-			printf(CONSTRAINT_NOT_MET_STRING, filename, lineNum);
-			return false;
+			MAP_CASE_STRING_CONSTRAINT_NOT_MET
 		}
 	} else {
-// variable is invalid
+		// variable is invalid
 		*msg = SP_CONFIG_INVALID_LINE;
 		printf(INVALID_LINE_STRING, filename, lineNum);
 		return false;
@@ -571,9 +668,9 @@ void freeBeforeExit(SPConfig config, FILE* file, char* line, char* variable,
 
 char* getVariableName(const char* line) {
 // We assume line is valid
-	// s*cc*s*=s*ccs*\0;
-	// s = whitespace, c = non-whitespace
-	// *=0 or more (regular expressions)
+// s*cc*s*=s*ccs*\0;
+// s = whitespace, c = non-whitespace
+// *=0 or more (regular expressions)
 	int i = 0;
 	while (isspace(line[i])) {
 		i++;
@@ -592,9 +689,9 @@ char* getVariableName(const char* line) {
 }
 
 char* getVariableValue(const char* line) {
-	// s*cc*s*=s*ccs*\0;
-	// s = whitespace, c = non-whitespace
-	// *=0 or more (regular expressions)
+// s*cc*s*=s*ccs*\0;
+// s = whitespace, c = non-whitespace
+// *=0 or more (regular expressions)
 	int i = 0;
 	while (isspace(line[i])) {
 		i++;
@@ -614,7 +711,7 @@ char* getVariableValue(const char* line) {
 		return false;
 	}
 	i++;
-	// line[i] = '='
+// line[i] = '='
 	while (isspace(line[i])) {
 		i++;
 	}
