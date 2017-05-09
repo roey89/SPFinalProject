@@ -72,9 +72,8 @@ double spPointGetAxisCoor(SPPoint* point, int axis) {
 
 double spPointL2SquaredDistance(SPPoint* p, SPPoint* q) {
 	assert(p != NULL);
-	double distance = 0, pDim = spPointGetDimension(p), qDim =
-			spPointGetDimension(q);
-	assert(q != NULL && pDim == qDim);
+	double distance = 0, pDim = spPointGetDimension(p);
+	assert(q != NULL && pDim == spPointGetDimension(q));
 // computing sum((p_i - q_i)^2) (for 1<=i<=d)
 	for (int i = 0; i < pDim; i++) {
 		distance += (spPointGetAxisCoor(p, i) - spPointGetAxisCoor(q, i))
