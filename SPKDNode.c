@@ -7,15 +7,15 @@
 
 #include <stdlib.h>
 #include <stdio.h>
-#include "SPKDNode.h"
-#include "SPPoint.h"
 #include <stdbool.h>
 #include <limits.h>
+#include "SPKDNode.h"
+#include "SPPoint.h"
 #include "SPBPriorityQueue.h"
 
 //todo
 
-#define spKNN  7
+#define spKNN 5
 
 struct node {
 	int dim;
@@ -31,7 +31,10 @@ KDTreeNode * CreateKDTreeNode() {
 	KDTreeNode *node = (KDTreeNode *) malloc(sizeof(KDTreeNode));
 	if (node == NULL) {
 		// logger - or maybe after
+		return NULL;
 	}
+	(*node).right = NULL;
+	(*node).left = NULL;
 	return node;
 }
 
@@ -158,6 +161,7 @@ KDTreeNode *init_sub_tree_INCREMENTAL(SPKDArray *kda, int upper_index_split) {
 		return NULL;
 	}
 	if (size == 1) {
+		(*node).val = NULL;
 		(*node).left = NULL;
 		(*node).right = NULL;
 		(*node).Data = spPointCopy((get_P(kda))[0]); //
@@ -194,7 +198,6 @@ SPBPQueue *find_k_nearest(KDTreeNode *head, SPPoint *p) {
 
 //todo: init for k nearest search
 void kNearestNeighbors(KDTreeNode *curr, SPBPQueue *queue, SPPoint *p) {
-	int val = spPointGetAxisCoor((*curr).val, (*curr).dim);
 	if (curr == NULL) {
 		return;
 	}
@@ -203,7 +206,7 @@ void kNearestNeighbors(KDTreeNode *curr, SPBPQueue *queue, SPPoint *p) {
 				spPointL2SquaredDistance((*curr).Data, p));
 		return;
 	}
-
+	int val = spPointGetAxisCoor((*curr).val, (*curr).dim);
 	KDTreeNode *other_subtree = NULL;
 	if (spPointGetAxisCoor(p, (*curr).dim) <= val) {
 		kNearestNeighbors((*curr).left, queue, p);
@@ -220,4 +223,5 @@ void kNearestNeighbors(KDTreeNode *curr, SPBPQueue *queue, SPPoint *p) {
 		//todo: what does search the other subtree on the next axis means
 		kNearestNeighbors(other_subtree, queue, p);
 	}
+
 }

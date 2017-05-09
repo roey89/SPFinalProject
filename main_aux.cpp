@@ -19,12 +19,16 @@ SPConfig createConfigFromCmd(int argc, char** argv) {
 	SPConfig config;
 	if (argc == 1) {
 		config = spConfigCreate("spcbir.config", msg);
+		if (*msg == SP_CONFIG_SUCCESS) {
+			free(msg);
+			return config;
+		}
 		if (*msg == SP_CONFIG_CANNOT_OPEN_FILE) {
 			printf(
-					"The default configuration file spcbir.config couldn’t be open\n");
-			free(msg);
-			return NULL;
+					"The default configuration file spcbir.config couldn't be open\n");
 		}
+		free(msg);
+		return NULL;
 	} else if (argc == 3) {
 		if (strcmp(argv[1], "-c") == 0) {
 			config = spConfigCreate(argv[2], msg);
@@ -33,7 +37,7 @@ SPConfig createConfigFromCmd(int argc, char** argv) {
 				return config;
 			}
 			if (*msg == SP_CONFIG_CANNOT_OPEN_FILE) {
-				printf("The configuration file %s couldn’t be open\n", argv[2]);
+				printf("The configuration file %s couldn't be open\n", argv[2]);
 			}
 			free(msg);
 			return NULL;

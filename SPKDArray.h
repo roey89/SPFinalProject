@@ -14,8 +14,6 @@ typedef struct KDA SPKDArray;
 
 typedef struct DKDA DKDArray;
 
-void print_point(SPPoint *p);
-
 int KDArrayGetDim(SPKDArray *kda);
 
 SPPoint **get_P(SPKDArray *kd);

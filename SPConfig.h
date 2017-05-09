@@ -181,10 +181,9 @@ SP_CONFIG_MSG spConfigGetPCAPath(char* pcaPath, const SPConfig config);
  */
 void spConfigDestroy(SPConfig config);
 
-/**
- * The function prints all the fields of the config (with their values).
- */
-void printConfig(SPConfig config);
+char* spConfigGetLoggerFilename(const SPConfig config, SP_CONFIG_MSG* msg);
+
+int spConfigGetLoggerLevel(const SPConfig config, SP_CONFIG_MSG* msg);
 
 /**
  * The function compares the fields of the config with the given variable (each field with its corresponding variable).

@@ -5,7 +5,6 @@
  *      Author: Gal
  */
 
-
 #include <stdlib.h>
 #include <stdio.h>
 #include "SPPoint.h"
@@ -20,15 +19,15 @@ struct KDA
 	int dim;
 };
 
+void print_point(SPPoint *p);
+
+void DestroyKDArray(SPKDArray *kda);
+
 struct DKDA
 {
 	SPKDArray *kdl;
 	SPKDArray *kdr;
 };
-
-void print_point(SPPoint *p);
-
-void DestroyKDArray(SPKDArray *kda);
 
 int KDArrayGetDim(SPKDArray *kda)
 {
@@ -50,6 +49,7 @@ SPKDArray *CreateKDArray(int size, int dim) // add logger!!!!!!!
 		return NULL;
 	}
 	(*kda).size = size;
+	(*kda).dim = dim;
 	(*kda).P = (SPPoint **)malloc(sizeof(SPPoint *)*size);
 	(*kda).A = (int **)malloc(sizeof(int *)*dim);
 	if((*kda).P == NULL || (*kda).A == NULL)
@@ -81,7 +81,7 @@ void DestroyKDArray(SPKDArray *kda)
 	{
 		spPointDestroy((*kda).P[i]);
 	}
-	int dim = KDArrayGetDim(kda);
+	int dim = (*kda).dim;
 	if((*kda).A != NULL)
 	{
 		for(int i =0 ; i<dim; i++)
@@ -90,6 +90,7 @@ void DestroyKDArray(SPKDArray *kda)
 		}
 		free((*kda).A);
 	}
+	free(kda);
 }
 
 

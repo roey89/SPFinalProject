@@ -19,23 +19,23 @@ C_COMP_FLAG = -std=c99 -Wall -Wextra \
 $(EXEC): $(OBJS)
 	$(CPP) $(OBJS) -L$(LIBPATH) $(LIBS) -o $@
 main.o: main.cpp SPConfig.h SPLogger.h SPImageProc.h SPPoint.h main_aux.h
-	$(CPP) $(CPP_COMP_FLAG) -I$(INCLUDEPATH) -c $*.cpp
+	$(CPP) $(CPP_COMP_FLAG) -I$(INCLUDEPATH) -c -g $*.cpp
 main_aux.o: main_aux.h main_aux.cpp SPConfig.h SPLogger.h
-	$(CPP) $(CPP_COMP_FLAG) -I$(INCLUDEPATH) -c $*.cpp
+	$(CPP) $(CPP_COMP_FLAG) -I$(INCLUDEPATH) -c -g $*.cpp
 SPImageProc.o: SPImageProc.cpp SPImageProc.h SPConfig.h SPLogger.h SPPoint.h
-	$(CPP) $(CPP_COMP_FLAG) -I$(INCLUDEPATH) -c $*.cpp
+	$(CPP) $(CPP_COMP_FLAG) -I$(INCLUDEPATH) -c -g $*.cpp
 SPConfig.o: SPConfig.c SPConfig.h SPLogger.h
-	$(CC) $(C_COMP_FLAG) -c $*.c
+	$(CC) $(C_COMP_FLAG) -c -g $*.c
 SPLogger.o: SPLogger.c SPLogger.h
-	$(CC) $(C_COMP_FLAG) -c $*.c
+	$(CC) $(C_COMP_FLAG) -c -g $*.c
 SPPoint.o: SPPoint.c SPPoint.h 
-	$(CC) $(C_COMP_FLAG) -c $*.c
+	$(CC) $(C_COMP_FLAG) -c -g $*.c
 SPBPriorityQueue.o: SPBPriorityQueue.c SPBPriorityQueue.h
-	$(CC) $(C_COMP_FLAG) -c $*.c
-SPKDArray.o: SPKDArray.c SPPoint.h SPKDArray.h
-	$(CC) $(C_COMP_FLAG) -c $*.c
+	$(CC) $(C_COMP_FLAG) -c -g $*.c
+SPKDArray.o: SPKDArray.c SPKDArray.h SPPoint.h
+	$(CC) $(C_COMP_FLAG) -c -g $*.c
 SPKDNode.o: SPKDNode.c SPKDNode.h SPPoint.h SPKDArray.h SPBPriorityQueue.h
-	$(CC) $(C_COMP_FLAG) -c $*.c
+	$(CC) $(C_COMP_FLAG) -c -g $*.c
 clean:
 	rm -f $(OBJS) $(EXEC)
 	

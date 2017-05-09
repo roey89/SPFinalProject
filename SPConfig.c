@@ -12,7 +12,7 @@
 #include <ctype.h>
 #include <string.h>
 
-typedef struct sp_config_t {
+struct sp_config_t {
 	// no default values
 	char* spImagesDirectory;
 	char* spImagesPrefix;
@@ -29,7 +29,7 @@ typedef struct sp_config_t {
 	bool spMinimalGUI;
 	int spLoggerLevel;
 	char* spLoggerFilename;
-} SPConfigStruct;
+};
 
 #define MAX_STRING_SIZE 1024
 
@@ -128,7 +128,7 @@ SPConfig spConfigCreate(const char* filename, SP_CONFIG_MSG* msg) {
 		return NULL;
 	}
 
-	SPConfig config = (SPConfig) malloc(sizeof(SPConfigStruct));
+	SPConfig config = (SPConfig) malloc(sizeof(struct sp_config_t));
 	if (!config) { //If allocation failed
 		fclose(fp);
 		spLoggerDestroy();
@@ -288,6 +288,33 @@ SP_CONFIG_MSG spConfigGetPCAPath(char* pcaPath, const SPConfig config) {
 // We assume pcaPath has enough space in it
 	sprintf(pcaPath, "%s%s", config->spImagesDirectory, config->spPCAFilename);
 	return SP_CONFIG_SUCCESS;
+}
+
+int spConfigGetLoggerLevel(const SPConfig config, SP_CONFIG_MSG* msg) {
+	assert(msg != NULL);
+	if (!config) {
+		*msg = SP_CONFIG_INVALID_ARGUMENT;
+		return -1;
+	}
+	*msg = SP_CONFIG_SUCCESS;
+	return config->spLoggerLevel;
+}
+
+char* spConfigGetLoggerFilename(const SPConfig config, SP_CONFIG_MSG* msg) {
+	assert(msg != NULL);
+	if (!config) {
+		*msg = SP_CONFIG_INVALID_ARGUMENT;
+		return NULL;
+	}
+	*msg = SP_CONFIG_SUCCESS;
+	char* ret = (char*) calloc(strlen(config->spLoggerFilename) + 1,
+			sizeof(char));
+	if (!ret) {
+		*msg = SP_CONFIG_ALLOC_FAIL;
+		return NULL;
+	}
+	strcpy(ret, config->spLoggerFilename);
+	return ret;
 }
 
 void spConfigDestroy(SPConfig config) {
@@ -845,19 +872,3 @@ bool booleanParser(char* boolean) {
 	return strcmp(boolean, "true") == 0;
 }
 
-void printConfig(SPConfig config) {
-	printf("\nspImagesDirectory = %s\n", config->spImagesDirectory);
-	printf("spImagesPrefix = %s\n", config->spImagesPrefix);
-	printf("spImagesSuffix = %s\n", config->spImagesSuffix);
-	printf("spNumOfImages = %d\n", config->spNumOfImages);
-	printf("spPCADimension = %d\n", config->spPCADimension);
-	printf("spPCAFilename = %s\n", config->spPCAFilename);
-	printf("spNumOfFeatures = %d\n", config->spNumOfFeatures);
-	printf("spExtractionMode = %d\n", config->spExtractionMode);
-	printf("spNumOfSimilarImages = %d\n", config->spNumOfSimilarImages);
-	printf("spKDTreeSplitMethod = %d\n", config->spKDTreeSplitMethod);
-	printf("spKNN = %d\n", config->spKNN);
-	printf("spMinimalGUI = %d\n", config->spMinimalGUI);
-	printf("spLoggerLevel = %d\n", config->spLoggerLevel);
-	printf("spLoggerFilename = %s\n\n", config->spLoggerFilename);
-}

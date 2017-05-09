@@ -19,5 +19,14 @@ extern "C" {
 
 int main(int argc, char** argv) {
 	SPConfig config = createConfigFromCmd(argc, argv);
+	if (!config) {
+		return 0;
+	}
+//	SP_CONFIG_MSG* msg = (SP_CONFIG_MSG*) malloc(sizeof(SP_CONFIG_MSG));
+//	char* loggerFileName = spConfigGetLoggerFilename(config, msg);
+//	SP_LOGGER_MSG* loggerMsg = (SP_LOGGER_MSG*) malloc(sizeof(SP_LOGGER_MSG));
+//	loggerMsg = spLoggerCreate(loggerFileName,
+//			spConfigGetLoggerLevel(config, msg));
+	spConfigDestroy(config);
 	return 0;
 }
