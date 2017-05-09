@@ -26,7 +26,6 @@ struct node {
 };
 
 static bool KDTree_init_memory_overflow = 0;
-typedef struct node KDTreeNode;
 
 KDTreeNode * CreateKDTreeNode() {
 	KDTreeNode *node = (KDTreeNode *) malloc(sizeof(KDTreeNode));

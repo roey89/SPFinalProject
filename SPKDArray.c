@@ -9,6 +9,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include "SPPoint.h"
+#include "SPKDArray.h"
 static SPPoint **p;
 static int comp_index = 0;
 struct KDA
@@ -19,20 +20,15 @@ struct KDA
 	int dim;
 };
 
-void print_point(SPPoint *p);
-
-typedef struct KDA SPKDArray;
-
-void DestroyKDArray(SPKDArray *kda);
-
-
 struct DKDA
 {
 	SPKDArray *kdl;
 	SPKDArray *kdr;
 };
 
-typedef struct DKDA DKDArray;
+void print_point(SPPoint *p);
+
+void DestroyKDArray(SPKDArray *kda);
 
 int KDArrayGetDim(SPKDArray *kda)
 {
@@ -285,6 +281,3 @@ void print_point(SPPoint *p)
 	printf("\n");
 	fflush(NULL);
 }
-
-
-

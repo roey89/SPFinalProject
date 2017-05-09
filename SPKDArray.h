@@ -10,11 +10,11 @@
 
 #include "SPPoint.h"
 
-void print_point(SPPoint *p);
-
 typedef struct KDA SPKDArray;
 
 typedef struct DKDA DKDArray;
+
+void print_point(SPPoint *p);
 
 int KDArrayGetDim(SPKDArray *kda);
 

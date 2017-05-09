@@ -1,7 +1,7 @@
 CC = gcc
 CPP = g++
 #put all your object files here
-OBJS = main.o SPImageProc.o SPPoint.o SPConfig.o SPLogger.o 
+OBJS = main.o main_aux.o SPImageProc.o SPConfig.o SPLogger.o SPPoint.o SPBPriorityQueue.o SPKDArray.o SPKDNode.o
 #The executabel filename
 EXEC = SPCBIR
 INCLUDEPATH=/usr/local/lib/opencv-3.1.0/include/
@@ -18,9 +18,11 @@ C_COMP_FLAG = -std=c99 -Wall -Wextra \
 
 $(EXEC): $(OBJS)
 	$(CPP) $(OBJS) -L$(LIBPATH) $(LIBS) -o $@
-main.o: main.cpp main_aux.h SPLogger.h SPConfig.h
+main.o: main.cpp SPConfig.h SPLogger.h SPImageProc.h SPPoint.h main_aux.h
 	$(CPP) $(CPP_COMP_FLAG) -I$(INCLUDEPATH) -c $*.cpp
-SPImageProc.o: SPImageProc.cpp SPImageProc.h SPConfig.h SPPoint.h SPLogger.h
+main_aux.o: main_aux.h main_aux.cpp SPConfig.h SPLogger.h
+	$(CPP) $(CPP_COMP_FLAG) -I$(INCLUDEPATH) -c $*.cpp
+SPImageProc.o: SPImageProc.cpp SPImageProc.h SPConfig.h SPLogger.h SPPoint.h
 	$(CPP) $(CPP_COMP_FLAG) -I$(INCLUDEPATH) -c $*.cpp
 SPConfig.o: SPConfig.c SPConfig.h SPLogger.h
 	$(CC) $(C_COMP_FLAG) -c $*.c
@@ -28,7 +30,12 @@ SPLogger.o: SPLogger.c SPLogger.h
 	$(CC) $(C_COMP_FLAG) -c $*.c
 SPPoint.o: SPPoint.c SPPoint.h 
 	$(CC) $(C_COMP_FLAG) -c $*.c
-	
+SPBPriorityQueue.o: SPBPriorityQueue.c SPBPriorityQueue.h
+	$(CC) $(C_COMP_FLAG) -c $*.c
+SPKDArray.o: SPKDArray.c SPPoint.h SPKDArray.h
+	$(CC) $(C_COMP_FLAG) -c $*.c
+SPKDNode.o: SPKDNode.c SPKDNode.h SPPoint.h SPKDArray.h SPBPriorityQueue.h
+	$(CC) $(C_COMP_FLAG) -c $*.c
 clean:
 	rm -f $(OBJS) $(EXEC)
 	

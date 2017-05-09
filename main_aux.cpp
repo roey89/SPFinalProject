@@ -12,6 +12,7 @@
 extern "C" {
 #include "SPConfig.h"
 }
+#include "main_aux.h"
 
 SPConfig createConfigFromCmd(int argc, char** argv) {
 	SP_CONFIG_MSG* msg = (SP_CONFIG_MSG*) malloc(sizeof(SP_CONFIG_MSG));
