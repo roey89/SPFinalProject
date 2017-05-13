@@ -13,32 +13,35 @@
 #include "../SPPoint.h"
 #include "../SPBPriorityQueue.h"
 #include "../SPKDArray.h"
-#include "../SPKDNode.h"
 
 void Create_N_Destroy_KDArray_Test() {
 	//todo
 }
 /**
- void print_point(SPPoint *p)
+ void //print_point(SPPoint *p)
  {
  int dim = spPointGetDimension(p);
  for(int i =0 ;i<dim; i++)
  {
- printf("%f  ", spPointGetAxisCoor(p, dim));
+ ////printf("%f  ", spPointGetAxisCoor(p, dim));
  }
- printf("\n");
- fflush(NULL);
+ ////printf("\n");
+ //fflush(NULL);;
  }
  */
+/**
+ *
 
-void print_array(int *arr, int size) {
+void //print_array(int *arr, int size) {
 	for (int i = 0; i < size; i++) {
-		printf("%d  ", arr[i]);
-		fflush(NULL);
+		////printf("%d  ", arr[i]);
+		//fflush(NULL);;
 	}
-	printf("\n");
-	fflush(NULL);
+	////printf("\n");
+	//fflush(NULL);;
 }
+*
+ */
 bool equal_arrays(int *arr1, int *arr2, int size) {
 	bool res = true;
 	for (int i = 0; i < size; i++) {
@@ -49,15 +52,19 @@ bool equal_arrays(int *arr1, int *arr2, int size) {
 	return res;
 }
 
-void print_mat(int **a, int n, int m) {
-	for (int i = 0; i < n; i++) {
+/**
+void //print_mat(int **a, int n, int m) {
+	for (int i = 0; i < n; i++)
+	{
 		for (int j = 0; j < m; j++) {
-			printf("%d  ", a[i][j]);
+			////printf("%d  ", a[i][j]);
 		}
-		printf(" \n");
-		fflush(NULL);
+		////printf(" \n");
+		//fflush(NULL);;
 	}
 }
+
+ */
 
 bool Init_Test() {
 	SPPoint **points1 = (SPPoint **) malloc(sizeof(SPPoint *) * 5);
@@ -133,21 +140,21 @@ bool Split_Test1() {
 	int ** kdl_A = get_A(kdl);
 
 	for (int i = 0; i < 3; i++) {
-		print_point(kdl_p[i]);
-		print_point(kdl_p_check[i]);
+		//print_point(kdl_p[i]);
+		//print_point(kdl_p_check[i]);
 		ASSERT_TRUE(spPointL2SquaredDistance(kdl_p[i], kdl_p_check[i]) == 0);
 	}
 	for (int i = 0; i < 2; i++) {
-		print_point(kdr_p[i]);
-		print_point(kdr_p_check[i]);
+		//print_point(kdr_p[i]);
+		//print_point(kdr_p_check[i]);
 		ASSERT_TRUE(spPointL2SquaredDistance(kdr_p[i], kdr_p_check[i]) == 0);
 	}
 
 	for (int i = 0; i < 4; i++) {
-		print_array(kdl_A[i], 3);
-		print_array(kdl_res_check[i], 3);
-		print_array(kdr_A[i], 2);
-		print_array(kdr_res_check[i], 2);
+		//print_array(kdl_A[i], 3);
+		//print_array(kdl_res_check[i], 3);
+		//print_array(kdr_A[i], 2);
+		//print_array(kdr_res_check[i], 2);
 		ASSERT_TRUE(equal_arrays(kdl_A[i], kdl_res_check[i], 3));
 		ASSERT_TRUE(equal_arrays(kdr_A[i], kdr_res_check[i], 2));
 	}
@@ -204,21 +211,21 @@ bool Split_Test2() {
 	int ** kdl_A = get_A(kdl);
 
 	for (int i = 0; i < 3; i++) {
-		print_point(kdl_p[i]);
-		print_point(kdl_p_check[i]);
+		//print_point(kdl_p[i]);
+		//print_point(kdl_p_check[i]);
 		ASSERT_TRUE(spPointL2SquaredDistance(kdl_p[i], kdl_p_check[i]) == 0);
 	}
 	for (int i = 0; i < 2; i++) {
-		print_point(kdr_p[i]);
-		print_point(kdr_p_check[i]);
+		//print_point(kdr_p[i]);
+		//print_point(kdr_p_check[i]);
 		ASSERT_TRUE(spPointL2SquaredDistance(kdr_p[i], kdr_p_check[i]) == 0);
 	}
 
 	for (int i = 0; i < 4; i++) {
-		print_array(kdl_A[i], 3);
-		print_array(kdl_res_check[i], 3);
-		print_array(kdr_A[i], 2);
-		print_array(kdr_res_check[i], 2);
+		//print_array(kdl_A[i], 3);
+		//print_array(kdl_res_check[i], 3);
+		//print_array(kdr_A[i], 2);
+		//print_array(kdr_res_check[i], 2);
 		ASSERT_TRUE(equal_arrays(kdl_A[i], kdl_res_check[i], 3));
 		ASSERT_TRUE(equal_arrays(kdr_A[i], kdr_res_check[i], 2));
 	}
@@ -234,7 +241,8 @@ bool Split_Test2() {
 	return true;
 }
 
-int main() {
+int main()
+{
 	RUN_TEST(Init_Test);
 	RUN_TEST(Split_Test1);
 	RUN_TEST(Split_Test2);

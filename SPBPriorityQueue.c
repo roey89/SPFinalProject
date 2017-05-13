@@ -21,8 +21,10 @@ SPBPQueue* spBPQueueCreate(int maxSize) {
 	}
 	(*q).size = 0;
 	(*q).maxSize = maxSize;
-	(*q).elements = (BPQueueElement**) malloc(
-			sizeof(BPQueueElement*) * maxSize);
+	(*q).elements = (BPQueueElement**) calloc(maxSize, sizeof(BPQueueElement*));
+	if ((*q).elements == NULL) {
+		return NULL;
+	}
 	return q;
 }
 

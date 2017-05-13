@@ -317,6 +317,28 @@ char* spConfigGetLoggerFilename(const SPConfig config, SP_CONFIG_MSG* msg) {
 	return ret;
 }
 
+//todo remove?
+int spConfigGetKNN(const SPConfig config, SP_CONFIG_MSG* msg) {
+	assert(msg != NULL);
+	if (!config) {
+		*msg = SP_CONFIG_INVALID_ARGUMENT;
+		return -1;
+	}
+	*msg = SP_CONFIG_SUCCESS;
+	return config->spKNN;
+}
+
+int spConfigGetNumOfSimilarImages(const SPConfig config, SP_CONFIG_MSG* msg) {
+	assert(msg != NULL);
+	if (!config) {
+		*msg = SP_CONFIG_INVALID_ARGUMENT;
+		return -1;
+	}
+	*msg = SP_CONFIG_SUCCESS;
+	return config->spNumOfSimilarImages;
+}
+
+
 void spConfigDestroy(SPConfig config) {
 	if (!config) {
 		return;

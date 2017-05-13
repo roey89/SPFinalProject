@@ -181,14 +181,63 @@ SP_CONFIG_MSG spConfigGetPCAPath(char* pcaPath, const SPConfig config);
  */
 void spConfigDestroy(SPConfig config);
 
+/**
+ * TODO: swap char* and SP_CONFIG_MSG*?
+ *
+ * The function stores in returns name of the logger file.
+ *
+ * @param msg - pointer in which the msg returned by the function is stored
+ * @param config - the configuration structure
+ * @return a string representing the file name.
+ */
 char* spConfigGetLoggerFilename(const SPConfig config, SP_CONFIG_MSG* msg);
 
+/**
+ * Returns and integer representing the spKNN. todo remove?
+ *
+ * @param config - the configuration structure
+ * @assert msg != NULL
+ * @param msg - pointer in which the msg returned by the function is stored
+ * @return positive integer in success, negative integer otherwise.
+ *
+ * - SP_CONFIG_INVALID_ARGUMENT - if config == NULL
+ * - SP_CONFIG_SUCCESS - in case of success
+ */
+int spConfigGetKNN(const SPConfig config, SP_CONFIG_MSG* msg);
+
+/**
+ * Returns and integer representing the numberOfSimilarImages.
+ *
+ * @param config - the configuration structure
+ * @assert msg != NULL
+ * @param msg - pointer in which the msg returned by the function is stored
+ * @return positive integer in success, negative integer otherwise.
+ *
+ * - SP_CONFIG_INVALID_ARGUMENT - if config == NULL
+ * - SP_CONFIG_SUCCESS - in case of success
+ */
+int spConfigGetNumOfSimilarImages(const SPConfig config, SP_CONFIG_MSG* msg);
+
+/**
+ * Returns and integer between 1 and 4 (inclusive) representing the logger level.
+ *
+ * @param config - the configuration structure
+ * @assert msg != NULL
+ * @param msg - pointer in which the msg returned by the function is stored
+ * @return positive integer between 1 and 4 (inclusive) in success, negative integer otherwise.
+ * in case of success returns:
+ * - 1 - Error level
+ * - 2 - Warning level
+ * - 3 - Info level
+ * - 4 - Debug level
+ * - SP_CONFIG_INVALID_ARGUMENT - if config == NULL
+ * - SP_CONFIG_SUCCESS - in case of success
+ */
 int spConfigGetLoggerLevel(const SPConfig config, SP_CONFIG_MSG* msg);
 
 /**
  * The function compares the fields of the config with the given variable (each field with its corresponding variable).
- * If there is a mismatch, the program will print the expected value and the actual value
- *
+ * If there is a mismatch, the program will print the expected value and the actual value.
  *
  * @return true if all fields are equal, false otherwise
  */
