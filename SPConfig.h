@@ -182,7 +182,6 @@ SP_CONFIG_MSG spConfigGetPCAPath(char* pcaPath, const SPConfig config);
 void spConfigDestroy(SPConfig config);
 
 /**
- * TODO: swap char* and SP_CONFIG_MSG*?
  *
  * The function stores in returns name of the logger file.
  *
@@ -200,10 +199,26 @@ char* spConfigGetLoggerFilename(const SPConfig config, SP_CONFIG_MSG* msg);
  * @param msg - pointer in which the msg returned by the function is stored
  * @return positive integer in success, negative integer otherwise.
  *
+ * @param msg:
  * - SP_CONFIG_INVALID_ARGUMENT - if config == NULL
  * - SP_CONFIG_SUCCESS - in case of success
  */
 int spConfigGetKNN(const SPConfig config, SP_CONFIG_MSG* msg);
+
+/**
+ * Returns the split method.
+ *
+ * @param config - the configuration structure
+ * @assert msg != NULL
+ * @param msg - pointer in which the msg returned by the function is stored
+ * @return the split method
+ *
+ * @param msg:
+ * - SP_CONFIG_INVALID_ARGUMENT - if config == NULL
+ * - SP_CONFIG_SUCCESS - in case of success
+ */
+SP_CONFIG_SPLIT_METHOD spConfigGetKDTreeSplitMethod(const SPConfig config,
+		SP_CONFIG_MSG* msg);
 
 /**
  * Returns and integer representing the numberOfSimilarImages.
@@ -213,6 +228,7 @@ int spConfigGetKNN(const SPConfig config, SP_CONFIG_MSG* msg);
  * @param msg - pointer in which the msg returned by the function is stored
  * @return positive integer in success, negative integer otherwise.
  *
+ * @param msg:
  * - SP_CONFIG_INVALID_ARGUMENT - if config == NULL
  * - SP_CONFIG_SUCCESS - in case of success
  */
@@ -230,6 +246,8 @@ int spConfigGetNumOfSimilarImages(const SPConfig config, SP_CONFIG_MSG* msg);
  * - 2 - Warning level
  * - 3 - Info level
  * - 4 - Debug level
+ *
+ * @param msg:
  * - SP_CONFIG_INVALID_ARGUMENT - if config == NULL
  * - SP_CONFIG_SUCCESS - in case of success
  */

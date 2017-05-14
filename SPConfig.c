@@ -71,31 +71,135 @@ struct sp_config_t {
 #define spKNN_DEFAULT 1
 #define spKDTreeSplitMethod_DEFAULT MAX_SPREAD
 #define spLoggerLevel_DEFAULT 3
-#define spLoggerFilename_DEFAULT "stdout"
+#define spLoggerFilename_DEFAULT NULL
 
 //General auxiliary functions
+
+/**
+ * This function sets the config field to their default values
+ */
 void setConfigInitialValues(SPConfig config);
+
+/**
+ * This function maps a variable and a value into a config and prints in case something goes wrong.
+ * It is an auxiliary function and is called from spConfigCreate only.
+ *
+ * @param config - the configuration structure
+ * @param variable - a string represents the variable's name
+ * @param value - a string represents the variable's value
+ * @param filename - the name of the file
+ * @param lineNum - the number of the line
+ * @param msg - a pointer in which the msg returned by the function is stored
+ * @param spImagesDirectorySet - a pointer which value is true if the variable set is spImagesDirectory
+ * @param spImagesPrefixSet - a pointer which value is true if the variable set is spImagesPrefix
+ * @param spImagesSuffixSet - a pointer which value is true if the variable set is spImagesSuffix
+ * @param spNumOfImagesSet - a pointer which value is true if the variable set is spNumOfImages
+ *
+ * @return true if the mapping is successful, false otherwise (an error occurs).
+ *
+ * The resulting value stored in msg is as follow:
+ * - SP_CONFIG_INVALID_INTEGER - if a line in the config file contains invalid integer
+ * - SP_CONFIG_INVALID_STRING - if a line in the config file contains invalid string
+ * - SP_CONFIG_INVALID_BOOLEAN - if a line in the config file contains invalid boolean
+ * - SP_CONFIG_INVALID_SP_CONFIG_INVALID_SPLIT_METHOD - if a line in the config file contains invalid split method
+ * - SP_CONFIG_INVALID_LINE - if a line in the config file has a variable that doesn't exist
+ * - no change - in case of success (will be set in spConfigCreate)
+ */
 bool mapVarAndValToConfig(SPConfig config, char* variable, char* value,
 		const char* filename, int lineNum, SP_CONFIG_MSG* msg);
+
+/**
+ * This function checks if all variables without default values has been set.
+ *
+ * @return true if they have all been set, false otherwise.
+ */
 bool allVariablesSet(SPConfig config, const char* filename, int lineNum,
 		SP_CONFIG_MSG* msg);
+
+/**
+ * This fuction releases the resources it gets as arguments
+ */
 void freeBeforeExit(SPConfig config, FILE* file, char* line, char* variable,
 		char* value);
+
+/**
+ * This function checks if a string represents a valid boolean, i.e. "true" or "false"
+ *
+ * @return true if string is "true" or "false", false otherwise
+ */
 bool isValidBoolean(const char* string);
+
+/**
+ * This function checks if an integer is positive.
+ *
+ * @return true if num > 0, false otherwise
+ */
 bool positiveNum(int num);
+
+/**
+ * This function checks if a string represents a valid integer.
+ *
+ * @return true if it does, false otherwise
+ */
 bool isInt(char* numString);
+
+/**
+ * This function checks if a string contains no whitespaces.
+ *
+ * @return true if str contains no whitespaces, false otherwise.
+ */
 bool noSpacesString(char* str);
 
 //Line parsers
+
+/**
+ * This functions checks if a config line is valid, To be valid a line can be either empty/comment only, or
+ * to meet this regular expression: w*cc*w*=w*ccw*\0. (where w = whitespace, c = non-whitespace character
+ * and * means 0 or more). i.e.:
+ * (0+whitespaces)(1+non-whitespaces)(0+whitespaces)(=)(0+whitespaces)(1+non-whitespaces)(0+whitespaces)(\0)
+ *
+ * @return true if the above is met, false otherwise
+ */
 bool isValidConfigLine(char* line);
+
+/**
+ * This functions extracts the variable name from a valid config line.
+ *
+ * @return the variable if the isn't empty/comment, false otherwise.
+ */
 char* getVariableName(const char* line);
+
+/**
+ * This functions extracts the variable value as string from a valid config line.
+ *
+ * @return the variable if the isn't empty/comment, false otherwise.
+ */
 char* getVariableValue(const char* line);
 
 //String parsers
+
+/**
+ * This function parses a split method from a string (assuming its a valid method string).
+ *
+ * @return the suitable split method.
+ */
 SP_CONFIG_SPLIT_METHOD spKDTreeSplitMethodParser(char* method);
+
+/**
+ * This function parses a boolean from a string (assuming its a valid boolean string).
+ *
+ * @return the suitable boolean value.
+ */
 bool booleanParser(char* boolean);
 
 //Constraints
+/*
+ * All of these functions check if the variable constraint is met (according
+ * to the instructions file). These functions are used in the mapping function,
+ * to see if the line is logically (not structurally) valid.
+ *
+ * They all return true if the constraint is met and false otherwise.
+ */
 bool spImagesDirectoryConstraint(char* directory);
 bool spImagesPrefixConstraint(char* prefix);
 bool spImagesSuffixConstraint(char* suffix);
@@ -109,6 +213,7 @@ bool spKDTreeSplitMethodConstraint(char* method);
 bool spKNNConstraint(int spKNN);
 bool spMinimalGUIConstraint(char* minimalGUI);
 bool spLoggerLevelConstraint(int level);
+
 bool spLoggerFilenameConstraint(char* filename);
 
 SPConfig spConfigCreate(const char* filename, SP_CONFIG_MSG* msg) {
@@ -307,6 +412,9 @@ char* spConfigGetLoggerFilename(const SPConfig config, SP_CONFIG_MSG* msg) {
 		return NULL;
 	}
 	*msg = SP_CONFIG_SUCCESS;
+	if (config->spLoggerFilename == NULL) {
+		return NULL;
+	}
 	char* ret = (char*) calloc(strlen(config->spLoggerFilename) + 1,
 			sizeof(char));
 	if (!ret) {
@@ -317,7 +425,6 @@ char* spConfigGetLoggerFilename(const SPConfig config, SP_CONFIG_MSG* msg) {
 	return ret;
 }
 
-//todo remove?
 int spConfigGetKNN(const SPConfig config, SP_CONFIG_MSG* msg) {
 	assert(msg != NULL);
 	if (!config) {
@@ -326,6 +433,17 @@ int spConfigGetKNN(const SPConfig config, SP_CONFIG_MSG* msg) {
 	}
 	*msg = SP_CONFIG_SUCCESS;
 	return config->spKNN;
+}
+
+SP_CONFIG_SPLIT_METHOD spConfigGetKDTreeSplitMethod(const SPConfig config,
+		SP_CONFIG_MSG* msg) {
+	assert(msg != NULL);
+	if (!config) {
+		*msg = SP_CONFIG_INVALID_ARGUMENT;
+		return -1;
+	}
+	*msg = SP_CONFIG_SUCCESS;
+	return config->spKDTreeSplitMethod;
 }
 
 int spConfigGetNumOfSimilarImages(const SPConfig config, SP_CONFIG_MSG* msg) {
@@ -337,7 +455,6 @@ int spConfigGetNumOfSimilarImages(const SPConfig config, SP_CONFIG_MSG* msg) {
 	*msg = SP_CONFIG_SUCCESS;
 	return config->spNumOfSimilarImages;
 }
-
 
 void spConfigDestroy(SPConfig config) {
 	if (!config) {
@@ -449,9 +566,7 @@ bool spConfigExpected(SPConfig config, char* spImagesDirectory,
 /////////////////////////////////
 
 bool isValidConfigLine(char* line) {
-// s*cc*s*=s*ccs*\0;
-// s = whitespace, c = non-whitespace
-// *=0 or more (regular expressions)
+
 	int i = 0;
 	while (isspace(line[i])) {
 		i++;
@@ -512,36 +627,9 @@ void setConfigInitialValues(SPConfig config) {
 	config->spKNN = spKNN_DEFAULT;
 	config->spMinimalGUI = spMinimalGUI_DEFAULT;
 	config->spLoggerLevel = spLoggerLevel_DEFAULT;
-	config->spLoggerFilename = (char *) calloc(
-			strlen(spLoggerFilename_DEFAULT) + 1, sizeof(char));
-	strcpy(config->spLoggerFilename, spLoggerFilename_DEFAULT);
+	config->spLoggerFilename = spLoggerFilename_DEFAULT;
 }
 
-/**
- * This function maps a variable and a value into a config and prints in case something goes wrong.
- * It is an auxiliary function and is called from spConfigCreate only.
- *
- * @param config - the configuration structure
- * @param variable - a string represents the variable's name
- * @param value - a string represents the variable's value
- * @param filename - the name of the file
- * @param lineNum - the number of the line
- * @param msg - a pointer in which the msg returned by the function is stored
- * @param spImagesDirectorySet - a pointer which value is true if the variable set is spImagesDirectory
- * @param spImagesPrefixSet - a pointer which value is true if the variable set is spImagesPrefix
- * @param spImagesSuffixSet - a pointer which value is true if the variable set is spImagesSuffix
- * @param spNumOfImagesSet - a pointer which value is true if the variable set is spNumOfImages
- *
- * @return true if the mapping is successful, false otherwise (an error occurs).
- *
- * The resulting value stored in msg is as follow:
- * - SP_CONFIG_INVALID_INTEGER - if a line in the config file contains invalid integer
- * - SP_CONFIG_INVALID_STRING - if a line in the config file contains invalid string
- * - SP_CONFIG_INVALID_BOOLEAN - if a line in the config file contains invalid boolean
- * - SP_CONFIG_INVALID_SP_CONFIG_INVALID_SPLIT_METHOD - if a line in the config file contains invalid split method
- * - SP_CONFIG_INVALID_LINE - if a line in the config file has a variable that doesn't exist
- * - no change - in case of success (will be set in spConfigCreate)
- */
 bool mapVarAndValToConfig(SPConfig config, char* variable, char* value,
 		const char* filename, int lineNum, SP_CONFIG_MSG* msg) {
 	if (strcmp(variable, "spImagesDirectory") == 0) {
@@ -721,9 +809,6 @@ void freeBeforeExit(SPConfig config, FILE* file, char* line, char* variable,
 
 char* getVariableName(const char* line) {
 // We assume line is valid
-// s*cc*s*=s*ccs*\0;
-// s = whitespace, c = non-whitespace
-// *=0 or more (regular expressions)
 	int i = 0;
 	while (isspace(line[i])) {
 		i++;
@@ -742,9 +827,7 @@ char* getVariableName(const char* line) {
 }
 
 char* getVariableValue(const char* line) {
-// s*cc*s*=s*ccs*\0;
-// s = whitespace, c = non-whitespace
-// *=0 or more (regular expressions)
+	// We assume line is valid
 	int i = 0;
 	while (isspace(line[i])) {
 		i++;
@@ -788,7 +871,7 @@ bool isValidBoolean(const char* string) {
 
 bool noSpacesString(char* str) {
 	for (int i = 0; i < (int) strlen(str); i++) {
-		if (str[i] == ' ') {
+		if (isspace(str[i])) {
 			return false;
 		}
 	}

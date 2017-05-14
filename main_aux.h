@@ -16,6 +16,8 @@ SPConfig createConfigFromCmd(int argc, char** argv);
 
 SP_LOGGER_LEVEL intToLoggerLevel(int num);
 
+void getQueryDirectoryFromUser(char* str);
+
 bool createLoggerFromConfig(SPConfig config, SP_LOGGER_MSG* loggerMsg,
 		SP_CONFIG_MSG* configMsg);
 

@@ -84,7 +84,6 @@ KDTreeNode *init_tree(SPPoint** arr, int size) {
 	return node;
 }
 
-
 //just as described in the project file
 KDTreeNode *init_sub_tree_MAX_SPREAD(SPKDArray *kda) {
 	int size = get_KDA_Size(kda);
@@ -95,8 +94,7 @@ KDTreeNode *init_sub_tree_MAX_SPREAD(SPKDArray *kda) {
 		DestroyKDArray(kda);
 		return NULL;
 	}
-	if (size == 1)
-	{
+	if (size == 1) {
 		(*node).left = NULL;
 		(*node).right = NULL;
 		(*node).Data = spPointCopy((get_P(kda))[0]); //
@@ -112,20 +110,19 @@ KDTreeNode *init_sub_tree_MAX_SPREAD(SPKDArray *kda) {
 	for (int i = 0; i < dim; i++) {
 		int curr_max = spPointGetAxisCoor(points[A[i][size - 1]], i);
 		int curr_min = spPointGetAxisCoor(points[A[i][0]], i);
-		if (curr_max - curr_min > max - min)
-		{
+		if (curr_max - curr_min > max - min) {
 			max = curr_max;
 			min = curr_min;
 			dim_index_split = i;
 		}
 	}
 	(*node).dim = dim_index_split;
-	(*node).val = spPointGetAxisCoor(get_P(kda)[A[dim_index_split][size / 2 + (size % 2)]], (*node).dim); // maybe just size/2
+	(*node).val = spPointGetAxisCoor(
+			get_P(kda)[A[dim_index_split][size / 2 + (size % 2)]], (*node).dim); // maybe just size/2
 	DKDArray *dkd = Split(kda, dim_index_split);
 	(*node).left = NULL;
 	(*node).right = NULL;
-	if(dkd!=NULL)
-	{
+	if (dkd != NULL) {
 		(*node).left = init_sub_tree_MAX_SPREAD(get_kdl(dkd));
 		(*node).right = init_sub_tree_MAX_SPREAD(get_kdr(dkd));
 	}
@@ -135,7 +132,6 @@ KDTreeNode *init_sub_tree_MAX_SPREAD(SPKDArray *kda) {
 
 	return node;
 }
-
 
 //just as described in the project file
 KDTreeNode *init_sub_tree_RANDOM(SPKDArray *kda) {
@@ -147,8 +143,7 @@ KDTreeNode *init_sub_tree_RANDOM(SPKDArray *kda) {
 		DestroyKDArray(kda);
 		return NULL;
 	}
-	if (size == 1)
-	{
+	if (size == 1) {
 		(*node).left = NULL;
 		(*node).right = NULL;
 		(*node).Data = spPointCopy((get_P(kda))[0]); //
@@ -159,7 +154,8 @@ KDTreeNode *init_sub_tree_RANDOM(SPKDArray *kda) {
 	int dim_index_split = rand() & dim;
 	int **A = get_A(kda);
 	(*node).dim = dim_index_split;
-	(*node).val = spPointGetAxisCoor(get_P(kda)[A[dim_index_split][size / 2 + (size % 2)]], (*node).dim);
+	(*node).val = spPointGetAxisCoor(
+			get_P(kda)[A[dim_index_split][size / 2 + (size % 2)]], (*node).dim);
 	DKDArray *dkd = Split(kda, dim_index_split);
 	(*node).left = init_sub_tree_RANDOM(get_kdl(dkd));
 	(*node).right = init_sub_tree_RANDOM(get_kdr(dkd));
@@ -167,7 +163,6 @@ KDTreeNode *init_sub_tree_RANDOM(SPKDArray *kda) {
 	free(dkd);
 	return node;
 }
-
 
 //just as described in the project file
 KDTreeNode *init_sub_tree_INCREMENTAL(SPKDArray *kda, int upper_index_split) {
@@ -191,7 +186,8 @@ KDTreeNode *init_sub_tree_INCREMENTAL(SPKDArray *kda, int upper_index_split) {
 	int dim_index_split = (upper_index_split + 1) % dim;
 	int **A = get_A(kda);
 	(*node).dim = dim_index_split;
-	(*node).val = spPointGetAxisCoor(get_P(kda)[A[dim_index_split][size / 2 + (size % 2)]], (*node).dim); // maybe just size/2 // needs to be a point
+	(*node).val = spPointGetAxisCoor(
+			get_P(kda)[A[dim_index_split][size / 2 + (size % 2)]], (*node).dim); // maybe just size/2 // needs to be a point
 	DKDArray *dkd = Split(kda, dim_index_split);
 	(*node).left = init_sub_tree_INCREMENTAL(get_kdl(dkd), dim_index_split);
 	(*node).right = init_sub_tree_INCREMENTAL(get_kdr(dkd), dim_index_split);
@@ -199,8 +195,6 @@ KDTreeNode *init_sub_tree_INCREMENTAL(SPKDArray *kda, int upper_index_split) {
 	free(dkd);
 	return node;
 }
-
-
 
 int isLeaf(KDTreeNode *curr) {
 	if ((*curr).left == NULL && (*curr).right == NULL) {
@@ -212,8 +206,8 @@ int isLeaf(KDTreeNode *curr) {
 SPBPQueue *find_k_nearest(KDTreeNode *head, SPPoint *p, SPConfig config) {
 	assert(p != NULL);
 	assert(config != NULL);
-	SP_CONFIG_MSG* msg = (SP_CONFIG_MSG*) malloc (sizeof(SP_CONFIG_MSG));
-	int numOfSimilarImages= spConfigGetNumOfSimilarImages(config, msg);
+	SP_CONFIG_MSG* msg = (SP_CONFIG_MSG*) malloc(sizeof(SP_CONFIG_MSG));
+	int numOfSimilarImages = spConfigGetNumOfSimilarImages(config, msg);
 	if (*msg == SP_CONFIG_INVALID_ARGUMENT) {
 		free(msg);
 		return NULL;
@@ -226,7 +220,6 @@ SPBPQueue *find_k_nearest(KDTreeNode *head, SPPoint *p, SPConfig config) {
 	kNearestNeighbors(head, queue, p);
 	return queue;
 }
-
 
 void kNearestNeighbors(KDTreeNode *curr, SPBPQueue *queue, SPPoint *p) {
 	if (curr == NULL) {
